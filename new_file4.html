@@ -1,0 +1,43 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reynolds Number Calculator</title>
+  
+ <script type="text/javascript">
+  function calculateReynolds() {
+ 	    reynolds.re.value = (reynolds.rho.value * reynolds.u.value * reynolds.d.value / reynolds.mu.value);
+ 	       }
+ </script> 
+   
+</head>
+<body>
+  <h1>Reynolds Number Calculator</h1>
+  <p>This calculator calculates the Reynolds number for a given fluid flow.</p>
+  
+  <form name="reynolds" label="Re">
+    <input type="text" name="rho" value="20"> Density (kg/m³)<br>
+    <input type="text" name="u"  value="10"> Velocity (m/s)<br>
+    <input type="text" name="d"  value="1"> Characteristic length (m)<br>
+    <input type="text" name="mu"  value="20"> Dynamic viscosity (Pa⋅s)<br>
+	<br>
+	Reynolds Number:
+	<input type="text" name="re"  disabled="disabled" placeholder="please click Calculate!"><br> <br>
+	<input type="submit" value="Calculate" onclick="calculateReynolds();return false;">
+  </form>
+  
+  <br>
+  <p>The Reynolds number is calculated using the following formula:</p>
+  <p><code>Re = ρ V L / μ</code></p>
+  <p>Where:</p>
+  <ul>
+    <li><code>ρ</code> is the density of the fluid (kg/m³)</li>
+    <li><code>V</code> is the velocity of the fluid (m/s)</li>
+    <li><code>L</code> is a characteristic length of the flow (m)</li>
+    <li><code>μ</code> is the dynamic viscosity of the fluid (Pa⋅s)</li>
+  </ul>
+  <p>The Reynolds number is a dimensionless number that is used to characterize the flow of a fluid. It can be used to predict the type of flow (laminar or turbulent), the frictional forces, and the heat transfer.</p>
+
+</body>
+
+</html>
