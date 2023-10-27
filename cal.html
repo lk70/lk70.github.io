@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  /* 样式用于左右布局 */
+  .horizontal-layout {
+    display: flex;
+    flex-direction: row;
+    justify-content: center; /* 水平居中 */
+    align-items: center; /* 垂直居中 */
+  }
+
+  
+  /* 样式用于每个页面 */
+  .page {
+    width: 50%; /* 每个页面占屏幕的一半宽度 */
+    height: 100vh; /* 页面占满屏幕的高度 */
+    margin: auto;
+  }
+
+  
+</style>
+</head>
+<body>
+  <!-- 创建左右布局容器 -->
+  <div class="horizontal-layout">
+    <div class="page">
+      <!-- 插入第一个页面的内容，使用iframe标签来加载外部页面 -->
+      <iframe src="https://www.engineersedge.com/calculators/scientific-calculator/" width="100%" height="100%"></iframe>
+    </div>
+    <div class="page">
+      <!-- 插入第二个页面的内容，使用iframe标签来加载外部页面 -->
+      <iframe src="https://www.engineersedge.com/calculators/scientific-calculator/" width="100%" height="100%"></iframe>
+    </div>
+  </div>
+
+  
+</body>
+</html>
