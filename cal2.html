@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  /* 样式用于左右布局 */
+  .horizontal-layout {
+    display: flex;
+    flex-direction: row;  
+  }
+
+  /* 样式用于上下布局 */
+  .vertical-layout {
+    display: flex;
+    flex-direction: column;   
+  }
+
+  /* 样式用于每个页面 */
+  .pageV {
+    width: 100%; /* 每个页面占满父容器的宽度 */
+    height: 50vh; /* 每个页面占满父容器的高度 */
+  }
+
+.pageH {
+    width: 50%; /* 每个页面占满父容器的宽度 */
+    height: 100vh; /* 每个页面占满父容器的高度 */
+  }
+
+  /* 用于调整横屏和竖屏布局的媒体查询 */
+  @media (orientation: landscape) {
+    .horizontal-layout {
+      flex-direction: row;
+    }
+
+    .vertical-layout {
+      flex-direction: row;
+    }
+  }
+
+  @media (orientation: portrait) {
+    .horizontal-layout {
+      flex-direction: column;
+    }
+
+    .vertical-layout {
+      flex-direction: column;
+    }
+  }
+</style>
+</head>
+<body>
+  <!-- 创建左右布局容器 -->
+  <div class="horizontal-layout">
+    <div class="pageH">
+      <!-- 插入第一个页面的内容，使用iframe标签来加载外部页面 -->
+      <iframe src="https://www.engineersedge.com/calculators/scientific-calculator/" width="100%" height="100%"></iframe>
+    </div>
+    <div class="pageH">
+      <!-- 插入第二个页面的内容，使用iframe标签来加载外部页面 -->
+      <iframe src="https://www.engineersedge.com/calculators/scientific-calculator/" width="100%" height="100%"></iframe>
+    </div>
+  </div>
+
+  <!-- 创建上下布局容器，与上面的布局相似 -->
+  <div class="vertical-layout">
+    <div class="pageV">
+      <iframe src="https://www.engineersedge.com/calculators/scientific-calculator/" width="100%" height="100%"></iframe>
+    </div>
+    <div class="pageV">
+      <iframe src="https://www.engineersedge.com/calculators/scientific-calculator/" width="100%" height="100%"></iframe>
+    </div>
+  </div>
+
+  <script>
+    // 检测浏览器屏幕大小并添加相应的布局类
+    function checkScreenSize() {
+      var screenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+      var screenHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+      var horizontalLayout = document.querySelector('.horizontal-layout');
+      var verticalLayout = document.querySelector('.vertical-layout');
+
+      if (screenWidth > screenHeight) {
+        horizontalLayout.style.display = 'flex';
+        verticalLayout.style.display = 'none';
+      } else {
+        horizontalLayout.style.display = 'none';
+        verticalLayout.style.display = 'flex';
+      }
+    }
+
+    // 在页面加载和窗口大小改变时调用检测函数
+    window.addEventListener('load', checkScreenSize);
+    window.addEventListener('resize', checkScreenSize);
+  </script>
+</body>
+</html>
