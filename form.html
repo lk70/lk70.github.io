@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+  <title>vue</title>
+</head>
+<body>
+  <div id="app">
+    <form @submit.prevent="submitPost">
+      <input type="text" name="name">
+      <input type="password" name="pass">
+      <div>
+        <input type="checkbox" name="ischeckbox">
+        <input type="radio" name="isradio">
+        <div>
+          <input type="mail" name="mail">
+          <div>
+            <input type="file" name="img">
+          </div>
+        </div>
+      </div>
+      <input type="submit" value="提交">
+    </form>
+  </div>
+  <script>
+  const app = new Vue({
+      el: '#app',
+      data: {
+      },
+      methods: {
+        submitPost(event) {
+          const formData = new FormData(event.target)
+          for (let [a, b] of formData) {
+            console.log('所有表单填写的内容：'+ a, b);
+          }
+        }
+      }
+  });
+  </script>
+</body>
+</html>
