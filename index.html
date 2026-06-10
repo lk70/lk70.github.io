@@ -1,90 +1,417 @@
 <!DOCTYPE html>
-<html lang="CN" dir="ltr" style="background-color: #727b9d; background-repeat: repeat;">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-        <title> Mak Engeering Calculation From Kelvin</title>         
-        <style type="text/css">* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins',sans-serif; } style { } ::selection { /* color: #894949 */ background: #a65b5b; } style { } nav { position: fixed; background: #1b1b1b; width: 100%; padding: 10px 0; z-index: 12; } nav .menu { max-width: 800px; margin: auto; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; } .menu .logo a { text-decoration: none; color: #f0f; font-size: 35px; font-weight: 600; } .menu ul { display: inline-flex; } .menu ul li { list-style: none; margin-left: 4px; } .menu ul li a { text-decoration: none; color: #fff; font-size: 18px; font-weight: 500; padding: 8px 15px; border-radius: 5px; transition: all; } .img { background: url('https://www.w3schools.com/w3images/cellphone.jpg')no-repeat; width: 100%; height: 100vh; background-size: cover; background-position: center; position: relative; } .center { position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); width: 100%; padding: 0 20px; text-align: center; } .center .title { color: #954141; font-size: 55px; font-weight: 600; } .center .sub_title { color: #0ff; font-size: 52px; font-weight: 600; } .center .btns { margin-top: 20px; } .center .btns button { height: 55px; width: 170px; border-radius: 5px; border: none; margin: 0 10px; border: 2px solid white; font-size: 20px; font-weight: 500; padding: 0 10px; cursor: pointer; outline: none; transition: all 0.3s ease; }
+<html lang="CN" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>工程计算 By Kelvin</title>         
+    <style type="text/css">
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
 
-		}</style>          
-    </head> 
-    <body>
-        <nav>
-            <div class="menu">
-                <div class="logo">
-                    <a href="https://mailecusteducn-my.sharepoint.com/:x:/g/personal/kelvinlewis_mail_ecust_edu_cn/EQo-DJ8q91JKtH2Jh4Foo9gBoK8_tSG619xlx8ocoPmkUA" target="_pg_blank">工程计算 By Kelvin</a>
-                </div>  
-                <ul>
-                    <li>
-                        <a href="mech.html">机械</a>
-                    </li>
-                    <li>
-                        <a href="chem.html" data-pg-ia>化工</a>
-                    </li>
-		    <li>
-                        <a href="help.html" data-pg-ia>反馈</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        <div class="center">
-            <div class="title">Create Amazing Website</div>
-            <div class="sub_title">Subtitle</div>
-            <a href="cal.html">双计算器效果</a></p>
-            <a href="cal2.html">新双计算器效果</a></p>
-             <a href="1_new2.pdf">PDF效果</a>
-            <button id="calcBtn" style="height:55px;width:170px;border-radius:5px;border:2px solid white;font-size:20px;font-weight:500;cursor:pointer;background:#954141;color:white;margin-top:15px;">计算器</button>
-            
-<object classid="clsid:CA8A9780-280D-11CF-A24D-444553540000" width="1000" height="1200" border="0">  
-    <param name="_Version" value="65539">  
-    <param name="_ExtentX" value="20108">  
-    <param name="_ExtentY" value="10866">  
-    <param name="_StockProps" value="0">  
-    <param name="SRC" value="1_new2.pdf">  
-    <style>
-.pdfobject-container { height: 500px; border: 1px solid #ccc; }
-</style>
-<div id="my-pdf"></div>
-<script src="https://unpkg.com/pdfobject"></script>
-<script>PDFObject.embed("1_new2.pdf", "#my-pdf");</script>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
 
-</div>
+        ::selection {
+            background: #a65b5b;
+            color: #fff;
+        }
+
+        nav {
+            position: fixed;
+            background: rgba(27, 27, 27, 0.95);
+            width: 100%;
+            padding: 15px 0;
+            z-index: 12;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        nav .menu {
+            max-width: 900px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+        }
+
+        .menu .logo a {
+            text-decoration: none;
+            color: #f0f;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .menu ul {
+            display: inline-flex;
+            list-style: none;
+        }
+
+        .menu ul li {
+            margin-left: 10px;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 8px 20px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .menu ul li a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .hero-section {
+            padding: 120px 20px 60px;
+            text-align: center;
+        }
+
+        .hero-section .title {
+            color: #fff;
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-section .sub_title {
+            color: #0ff;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .links-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .links-container a {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .links-container a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .pdf-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            margin-bottom: 40px;
+        }
+
+        .pdfobject-container {
+            height: 600px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .footer-calc {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 10;
+        }
+
+        #calcBtn {
+            height: 60px;
+            width: 60px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.5);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #calcBtn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.7);
+        }
+
+        #calcBtn:active {
+            transform: scale(0.95);
+        }
+
+        #calcModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #calcModal .calc-wrapper {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            padding: 25px;
+            border-radius: 20px;
+            width: 340px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .calc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calc-header span:first-child {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        #closeCalc {
+            color: #aaa;
+            font-size: 28px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        #closeCalc:hover {
+            color: #fff;
+        }
+
+        #calcDisplay {
+            width: 100%;
+            height: 70px;
+            text-align: right;
+            font-size: 32px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: none;
+            background: #3a3a3a;
+            color: #fff;
+            margin-bottom: 15px;
+            font-weight: 500;
+            letter-spacing: 2px;
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .calc-buttons button {
+            padding: 18px;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 12px;
+            border: none;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .calc-buttons button:hover {
+            transform: translateY(-2px);
+        }
+
+        .calc-buttons button:active {
+            transform: translateY(0);
+        }
+
+        .num-btn {
+            background: #4a4a4a;
+            color: #fff;
+        }
+
+        .num-btn:hover {
+            background: #5a5a5a;
+        }
+
+        .op-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: #fff;
+        }
+
+        .op-btn:hover {
+            background: linear-gradient(135deg, #ff8787, #f07038);
+        }
+
+        .clear-btn {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .clear-btn:hover {
+            background: #7d858d;
+        }
+
+        .eq-btn {
+            background: linear-gradient(135deg, #00d9ff, #0099cc);
+            color: #fff;
+            grid-column: span 4;
+        }
+
+        .eq-btn:hover {
+            background: linear-gradient(135deg, #33e0ff, #33aadd);
+        }
+    </style>          
+</head> 
+<body>
+    <nav>
+        <div class="menu">
+            <div class="logo">
+                <a href="https://mailecusteducn-my.sharepoint.com/:x:/g/personal/kelvinlewis_mail_ecust_edu_cn/EQo-DJ8q91JKtH2Jh4Foo9gBoK8_tSG619xlx8ocoPmkUA" target="_pg_blank">工程计算 By Kelvin</a>
+            </div>  
+            <ul>
+                <li><a href="mech.html">机械</a></li>
+                <li><a href="chem.html">化工</a></li>
+                <li><a href="help.html">反馈</a></li>
+            </ul>
         </div>
-    <div id="calcModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center;">
-  <div style="background:#1b1b1b;padding:20px;border-radius:10px;width:320px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-      <span style="color:white;font-size:18px;">计算器</span>
-      <span id="closeCalc" style="color:white;font-size:24px;cursor:pointer;">&times;</span>
+    </nav>
+
+    <div class="hero-section">
+        <div class="title">工程计算平台</div>
+        <div class="sub_title">Engineering Calculation Platform</div>
+        
+        <div class="links-container">
+            <a href="cal.html">双计算器效果</a>
+            <a href="cal2.html">新双计算器效果</a>
+            <a href="1_new2.pdf">PDF效果</a>
+        </div>
+
+        <div class="pdf-container">
+            <div id="my-pdf"></div>
+        </div>
     </div>
-    <input id="calcDisplay" type="text" style="width:100%;height:50px;text-align:right;font-size:24px;padding:10px;margin-bottom:10px;border-radius:5px;border:none;">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
-      <button onclick="calcInput('7')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">7</button>
-      <button onclick="calcInput('8')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">8</button>
-      <button onclick="calcInput('9')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">9</button>
-      <button onclick="calcInput('/')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#f0f;">/</button>
-      <button onclick="calcInput('4')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">4</button>
-      <button onclick="calcInput('5')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">5</button>
-      <button onclick="calcInput('6')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">6</button>
-      <button onclick="calcInput('*')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#f0f;">×</button>
-      <button onclick="calcInput('1')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">1</button>
-      <button onclick="calcInput('2')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">2</button>
-      <button onclick="calcInput('3')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">3</button>
-      <button onclick="calcInput('-')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#f0f;">-</button>
-      <button onclick="calcInput('0')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">0</button>
-      <button onclick="calcInput('.')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">.</button>
-      <button onclick="calcClear()" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#a65b5b;color:white;">C</button>
-      <button onclick="calcInput('+')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#f0f;">+</button>
-      <button onclick="calcResult()" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#0ff;grid-column:span 4;">=</button>
+
+    <div class="footer-calc">
+        <button id="calcBtn">🧮</button>
     </div>
-  </div>
-</div>
-<script>
-function calcInput(val){document.getElementById('calcDisplay').value+=val;}
-function calcClear(){document.getElementById('calcDisplay').value='';}
-function calcResult(){try{var r=eval(document.getElementById('calcDisplay').value);document.getElementById('calcDisplay').value=r;}catch(e){document.getElementById('calcDisplay').value='Error';}}
-document.getElementById('calcBtn').onclick=function(){document.getElementById('calcModal').style.display='flex';};
-document.getElementById('closeCalc').onclick=function(){document.getElementById('calcModal').style.display='none';};
-document.getElementById('calcModal').onclick=function(e){if(e.target===this)this.style.display='none';};
-</script>
+
+    <div id="calcModal">
+        <div class="calc-wrapper">
+            <div class="calc-header">
+                <span>计算器</span>
+                <span id="closeCalc">&times;</span>
+            </div>
+            <input id="calcDisplay" type="text" readonly>
+            <div class="calc-buttons">
+                <button class="num-btn" onclick="calcInput('7')">7</button>
+                <button class="num-btn" onclick="calcInput('8')">8</button>
+                <button class="num-btn" onclick="calcInput('9')">9</button>
+                <button class="op-btn" onclick="calcInput('/')">÷</button>
+                <button class="num-btn" onclick="calcInput('4')">4</button>
+                <button class="num-btn" onclick="calcInput('5')">5</button>
+                <button class="num-btn" onclick="calcInput('6')">6</button>
+                <button class="op-btn" onclick="calcInput('*')">×</button>
+                <button class="num-btn" onclick="calcInput('1')">1</button>
+                <button class="num-btn" onclick="calcInput('2')">2</button>
+                <button class="num-btn" onclick="calcInput('3')">3</button>
+                <button class="op-btn" onclick="calcInput('-')">−</button>
+                <button class="num-btn" onclick="calcInput('0')">0</button>
+                <button class="num-btn" onclick="calcInput('.')">.</button>
+                <button class="clear-btn" onclick="calcClear()">C</button>
+                <button class="op-btn" onclick="calcInput('+')">+</button>
+                <button class="eq-btn" onclick="calcResult()">=</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/pdfobject"></script>
+    <script>
+        PDFObject.embed("1_new2.pdf", "#my-pdf");
+        
+        function calcInput(val) {
+            document.getElementById('calcDisplay').value += val;
+        }
+        
+        function calcClear() {
+            document.getElementById('calcDisplay').value = '';
+        }
+        
+        function calcResult() {
+            try {
+                var display = document.getElementById('calcDisplay');
+                var expr = display.value.replace('×', '*').replace('÷', '/').replace('−', '-');
+                var r = eval(expr);
+                display.value = r;
+            } catch(e) {
+                document.getElementById('calcDisplay').value = 'Error';
+            }
+        }
+        
+        document.getElementById('calcBtn').onclick = function() {
+            document.getElementById('calcModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        };
+        
+        document.getElementById('closeCalc').onclick = function() {
+            document.getElementById('calcModal').style.display = 'none';
+            document.body.style.overflow = '';
+        };
+        
+        document.getElementById('calcModal').onclick = function(e) {
+            if(e.target === this) {
+                this.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        };
+    </script>
 </body>
 </html>
