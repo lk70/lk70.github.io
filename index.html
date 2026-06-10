@@ -33,6 +33,7 @@
             <a href="cal.html">双计算器效果</a></p>
             <a href="cal2.html">新双计算器效果</a></p>
              <a href="1_new2.pdf">PDF效果</a>
+            <button id="calcBtn" style="height:55px;width:170px;border-radius:5px;border:2px solid white;font-size:20px;font-weight:500;cursor:pointer;background:#954141;color:white;margin-top:15px;">计算器</button>
             
 <object classid="clsid:CA8A9780-280D-11CF-A24D-444553540000" width="1000" height="1200" border="0">  
     <param name="_Version" value="65539">  
@@ -49,5 +50,41 @@
 
 </div>
         </div>
-    </body>
+    <div id="calcModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center;">
+  <div style="background:#1b1b1b;padding:20px;border-radius:10px;width:320px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+      <span style="color:white;font-size:18px;">计算器</span>
+      <span id="closeCalc" style="color:white;font-size:24px;cursor:pointer;">&times;</span>
+    </div>
+    <input id="calcDisplay" type="text" style="width:100%;height:50px;text-align:right;font-size:24px;padding:10px;margin-bottom:10px;border-radius:5px;border:none;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+      <button onclick="calcInput('7')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">7</button>
+      <button onclick="calcInput('8')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">8</button>
+      <button onclick="calcInput('9')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">9</button>
+      <button onclick="calcInput('/')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#f0f;">/</button>
+      <button onclick="calcInput('4')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">4</button>
+      <button onclick="calcInput('5')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">5</button>
+      <button onclick="calcInput('6')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">6</button>
+      <button onclick="calcInput('*')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#f0f;">×</button>
+      <button onclick="calcInput('1')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">1</button>
+      <button onclick="calcInput('2')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">2</button>
+      <button onclick="calcInput('3')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">3</button>
+      <button onclick="calcInput('-')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#f0f;">-</button>
+      <button onclick="calcInput('0')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">0</button>
+      <button onclick="calcInput('.')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;">.</button>
+      <button onclick="calcClear()" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#a65b5b;color:white;">C</button>
+      <button onclick="calcInput('+')" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#f0f;">+</button>
+      <button onclick="calcResult()" style="padding:15px;font-size:18px;cursor:pointer;border-radius:5px;border:none;background:#0ff;grid-column:span 4;">=</button>
+    </div>
+  </div>
+</div>
+<script>
+function calcInput(val){document.getElementById('calcDisplay').value+=val;}
+function calcClear(){document.getElementById('calcDisplay').value='';}
+function calcResult(){try{var r=eval(document.getElementById('calcDisplay').value);document.getElementById('calcDisplay').value=r;}catch(e){document.getElementById('calcDisplay').value='Error';}}
+document.getElementById('calcBtn').onclick=function(){document.getElementById('calcModal').style.display='flex';};
+document.getElementById('closeCalc').onclick=function(){document.getElementById('calcModal').style.display='none';};
+document.getElementById('calcModal').onclick=function(e){if(e.target===this)this.style.display='none';};
+</script>
+</body>
 </html>
