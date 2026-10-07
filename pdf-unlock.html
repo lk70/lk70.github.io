@@ -30,13 +30,25 @@
   }
   .wrap { width: 100%; max-width: 720px; }
 
-  header { text-align: center; margin-bottom: 28px; }
+  header { text-align: center; margin-bottom: 20px; }
   header .logo {
     display: inline-flex; align-items: center; gap: 10px;
     font-size: 22px; font-weight: 700; letter-spacing: .5px;
   }
   header .logo svg { width: 34px; height: 34px; }
   header p { color: var(--ink-2); font-size: 14px; margin-top: 10px; line-height: 1.6; }
+
+  .aes-banner {
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 0 18px; padding: 10px 14px;
+    border-radius: 10px; font-size: 13px; line-height: 1.5;
+    border: 1px solid var(--line); background: #f8fafc; color: var(--ink-2);
+  }
+  .aes-banner.ok { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+  .aes-banner.warn { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+  .aes-banner .adot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; flex: none; }
+  .aes-banner.ok .adot { background: var(--ok); }
+  .aes-banner.warn .adot { background: #f59e0b; }
 
   .card {
     background: var(--card);
@@ -49,7 +61,7 @@
   #drop {
     border: 2px dashed #cbd5e1;
     border-radius: 12px;
-    padding: 42px 20px;
+    padding: 40px 20px;
     text-align: center;
     cursor: pointer;
     transition: border-color .2s, background .2s;
@@ -59,11 +71,17 @@
   #drop .t1 { font-size: 15px; font-weight: 600; }
   #drop .t2 { color: var(--ink-2); font-size: 13px; margin-top: 6px; }
 
-  .fileinfo { display: none; margin-top: 16px; padding: 12px 14px; background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
-  .fileinfo.show { display: block; }
-  .fileinfo .row { display: flex; justify-content: space-between; gap: 12px; margin: 3px 0; }
-  .fileinfo .k { color: var(--ink-2); }
-  .fileinfo .v { font-weight: 600; word-break: break-all; text-align: right; }
+  .filelist { margin-top: 16px; border: 1px solid var(--line); border-radius: 10px; max-height: 240px; overflow-y: auto; background: #f8fafc; }
+  .filelist[hidden] { display: none; }
+  .filelist .item {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 9px 12px; font-size: 13px; border-bottom: 1px solid var(--line);
+  }
+  .filelist .item:last-child { border-bottom: none; }
+  .filelist .n { font-weight: 600; word-break: break-all; }
+  .filelist .s { color: var(--ink-2); flex: none; }
+  .filelist .x { color: #94a3b8; cursor: pointer; flex: none; padding: 0 5px; font-size: 14px; }
+  .filelist .x:hover { color: var(--err); }
 
   .actions { display: flex; gap: 12px; margin-top: 18px; }
   button {
@@ -89,17 +107,21 @@
 
   .result { display: none; margin-top: 18px; border-top: 1px solid var(--line); padding-top: 18px; }
   .result.show { display: block; }
-  .result .rt { font-size: 15px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .result .rt { font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .result .rt svg { width: 20px; height: 20px; color: var(--ok); }
-  .result .row { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; margin: 5px 0; }
-  .result .k { color: var(--ink-2); }
-  .result .v { font-weight: 600; }
-  #dl {
-    display: block; margin-top: 14px; text-align: center;
-    background: var(--ok); color: #fff; text-decoration: none;
-    border-radius: 10px; padding: 13px 20px; font-weight: 700; font-size: 15px;
+  .res-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+    margin-bottom: 8px; background: #f8fafc;
   }
-  #dl:hover { filter: brightness(1.05); }
+  .res-item .ri-name { flex: 1; font-weight: 600; font-size: 13px; word-break: break-all; }
+  .res-item .ri-info { font-size: 12px; color: var(--ok); white-space: nowrap; }
+  .res-item .ri-info.err { color: var(--err); }
+  .res-item .ri-dl {
+    background: var(--ok); color: #fff; text-decoration: none;
+    border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 700; flex: none;
+  }
+  .res-item .ri-dl:hover { filter: brightness(1.05); }
 
   footer { margin-top: 26px; text-align: center; color: var(--ink-2); font-size: 12px; line-height: 1.7; }
   footer b { color: #475569; }
@@ -115,24 +137,26 @@
     <p>移除 PDF 的「编辑 / 打印 / 复制」等权限限制（Owner 密码），<br>全部在本地浏览器中处理，文件不会上传到任何服务器。</p>
   </header>
 
+  <div class="aes-banner" id="aesbanner" hidden>
+    <span class="adot" id="aesdot"></span>
+    <span id="aestext"></span>
+  </div>
+
   <div class="card">
     <div id="drop">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
         <path d="M12 16V4m0 0 4 4m-4-4L8 8"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
       </svg>
-      <div class="t1">点击选择，或将 PDF 文件拖到此处</div>
-      <div class="t2">支持带权限限制（可打开但禁止编辑/打印/复制）的 PDF · RC4 / AES-128 / AES-256</div>
-      <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+      <div class="t1">点击选择，或将 PDF 文件拖到此处（支持多选）</div>
+      <div class="t2">支持带权限限制（可打开但禁止编辑/打印/复制）的 PDF · RC4 / AES-128 / AES-256 · 可批量处理</div>
+      <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
     </div>
 
-    <div class="fileinfo" id="fileinfo">
-      <div class="row"><span class="k">文件</span><span class="v" id="fi-name"></span></div>
-      <div class="row"><span class="k">大小</span><span class="v" id="fi-size"></span></div>
-    </div>
+    <div class="filelist" id="filelist" hidden></div>
 
     <div class="actions">
       <button id="pick">重新选择</button>
-      <button id="go">移除密码并下载</button>
+      <button id="go">批量移除密码并下载</button>
     </div>
 
     <div class="status" id="status"></div>
@@ -140,19 +164,15 @@
     <div class="result" id="result">
       <div class="rt">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
-        移除完成
+        处理结果
       </div>
-      <div class="row"><span class="k">解密的数据流</span><span class="v" id="r-streams"></span></div>
-      <div class="row"><span class="k">加密算法</span><span class="v" id="r-algo"></span></div>
-      <div class="row"><span class="k">输出大小</span><span class="v" id="r-size"></span></div>
-      <div class="row"><span class="k">处理耗时</span><span class="v" id="r-time"></span></div>
-      <a id="dl" download="unlocked.pdf">下载解锁后的 PDF</a>
+      <div id="resultlist"></div>
     </div>
   </div>
 
   <footer>
     <b>隐私说明：</b>解密逻辑完全运行在您的浏览器本地（JavaScript），文件不离开本机。<br>
-    支持「RC4 / AES-128 / AES-256 加密 + 空打开密码」的权限限制型 PDF，可处理数十至数百 MB 的大文件；需要打开密码（User Password）的 PDF 无法处理。
+    支持「RC4 / AES-128 / AES-256 加密 + 空打开密码」的权限限制型 PDF，可批量处理、可处理数十至数百 MB 的大文件；需要打开密码（User Password）的 PDF 无法处理。
   </footer>
 </div>
 
@@ -1371,9 +1391,12 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const drop = $('drop'), file = $('file'), pick = $('pick'), go = $('go');
-  const status = $('status'), result = $('result');
-  let selected = null;
+  const status = $('status'), result = $('result'), resultlist = $('resultlist');
+  let files = [];
 
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
   function fmtSize(n) {
     if (n < 1024) return n + ' B';
     if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
@@ -1384,63 +1407,122 @@
     status.innerHTML = html;
   }
   function clearStatus() { status.className = 'status'; status.innerHTML = ''; }
-  function showFile(f) {
-    selected = f;
-    $('fi-name').textContent = f.name;
-    $('fi-size').textContent = fmtSize(f.size);
-    $('fileinfo').classList.add('show');
+
+  function renderFiles() {
+    const el = $('filelist');
+    if (!files.length) { el.hidden = true; return; }
+    el.innerHTML = '';
+    files.forEach((f, i) => {
+      const it = document.createElement('div');
+      it.className = 'item';
+      it.innerHTML = '<span class="n"></span><span class="s"></span><span class="x" title="移除该文件">✕</span>';
+      it.querySelector('.n').textContent = f.name;
+      it.querySelector('.s').textContent = fmtSize(f.size);
+      it.querySelector('.x').onclick = () => { files.splice(i, 1); renderFiles(); };
+      el.appendChild(it);
+    });
+    el.hidden = false;
     result.classList.remove('show');
     clearStatus();
   }
+  function addFiles(list) {
+    for (const f of list) {
+      if (!/\.pdf$/i.test(f.name)) continue;
+      if (files.some(x => x.name === f.name && x.size === f.size)) continue;
+      files.push(f);
+    }
+    renderFiles();
+  }
+
+  // ===== AES 环境检测（页面加载时）=====
+  async function detectAES() {
+    try {
+      if (!window.crypto || !crypto.subtle) return false;
+      const k = await crypto.subtle.importKey('raw', new Uint8Array(16), { name: 'AES-CBC' }, false, ['encrypt', 'decrypt']);
+      return !!k;
+    } catch (e) { return false; }
+  }
+  detectAES().then(ok => {
+    const b = $('aesbanner');
+    if (ok) {
+      b.classList.add('ok');
+      $('aestext').textContent = '当前环境支持 Web Crypto AES，AES-128 / AES-256 解密可用硬件加速。';
+    } else {
+      b.classList.add('warn');
+      $('aestext').textContent = '当前环境不支持 Web Crypto AES（通常因以 file:// 或 http 方式打开页面），将使用内置纯 JS 实现，功能不受影响，仅速度稍慢。';
+    }
+    b.hidden = false;
+  });
 
   drop.addEventListener('click', () => file.click());
   drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
   drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
   drop.addEventListener('drop', e => {
     e.preventDefault(); drop.classList.remove('drag');
-    const f = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (f) showFile(f);
+    if (e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
   });
-  file.addEventListener('change', () => { if (file.files[0]) showFile(file.files[0]); });
+  file.addEventListener('change', () => { if (file.files.length) addFiles(file.files); file.value = ''; });
   pick.addEventListener('click', () => file.click());
 
   go.addEventListener('click', async () => {
-    if (!selected) { setStatus('请先选择要处理的 PDF 文件。', 'err'); return; }
+    if (!files.length) { setStatus('请先选择要处理的 PDF 文件。', 'err'); return; }
     go.disabled = true; pick.disabled = true;
-    setStatus('<span class="spinner"></span>正在解析并解密，请稍候…');
     result.classList.remove('show');
-    try {
-      // 让 spinner 先渲染，再进入同步解密
-      await new Promise(r => setTimeout(r, 30));
-      const buf = new Uint8Array(await selected.arrayBuffer());
-      const t0 = performance.now();
-      const { bytes, info } = await PDFUnlock.unlock(buf);
-      const ms = Math.round(performance.now() - t0);
-
-      if (info.alreadyUnencrypted) {
-        setStatus('该 PDF 没有加密，无需移除密码。', 'ok');
-        return;
+    resultlist.innerHTML = '';
+    const total = files.length;
+    let okCount = 0;
+    for (let i = 0; i < total; i++) {
+      const f = files[i];
+      setStatus('<span class="spinner"></span>正在处理 ' + (i + 1) + '/' + total + '：' + escapeHtml(f.name) + '…');
+      await new Promise(r => setTimeout(r, 10)); // 先渲染 spinner
+      const item = document.createElement('div');
+      item.className = 'res-item';
+      try {
+        const buf = new Uint8Array(await f.arrayBuffer());
+        const t0 = performance.now();
+        const { bytes, info } = await PDFUnlock.unlock(buf);
+        const ms = Math.round(performance.now() - t0);
+        if (info.alreadyUnencrypted) {
+          item.innerHTML = '<span class="ri-name"></span><span class="ri-info err">未加密，无需处理</span>';
+          item.querySelector('.ri-name').textContent = f.name;
+          resultlist.appendChild(item);
+          continue;
+        }
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const base = f.name.replace(/\.pdf$/i, '');
+        const method = info.cryptMethod === 'AES' ? 'AES-128' : info.cryptMethod === 'AES256' ? 'AES-256' : 'RC4';
+        const link = document.createElement('a');
+        link.className = 'ri-dl';
+        link.href = url;
+        link.download = base + '_unlocked.pdf';
+        link.textContent = '下载';
+        const nameEl = document.createElement('span');
+        nameEl.className = 'ri-name';
+        nameEl.textContent = f.name;
+        const infoEl = document.createElement('span');
+        infoEl.className = 'ri-info';
+        infoEl.textContent = '解密成功 · ' + method + ' · ' + ms + ' ms · ' + fmtSize(bytes.byteLength);
+        item.appendChild(nameEl);
+        item.appendChild(infoEl);
+        item.appendChild(link);
+        resultlist.appendChild(item);
+        okCount++;
+      } catch (e) {
+        const nameEl = document.createElement('span');
+        nameEl.className = 'ri-name';
+        nameEl.textContent = f.name;
+        const infoEl = document.createElement('span');
+        infoEl.className = 'ri-info err';
+        infoEl.textContent = '失败：' + (e && e.message ? e.message : String(e));
+        item.appendChild(nameEl);
+        item.appendChild(infoEl);
+        resultlist.appendChild(item);
       }
-      const blob = new Blob([bytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const base = selected.name.replace(/\.pdf$/i, '');
-      const link = $('dl');
-      link.href = url;
-      link.download = base + '_unlocked.pdf';
-      link.textContent = '下载 ' + base + '_unlocked.pdf';
-
-      $('r-streams').textContent = info.decryptedStreams + ' 个';
-      const method = info.cryptMethod === 'AES' ? 'AES-128' : info.cryptMethod === 'AES256' ? 'AES-256' : 'RC4';
-      $('r-algo').textContent = method + (info.classicXref ? '（传统 xref）' : '') + ' · 空打开密码';
-      $('r-size').textContent = fmtSize(bytes.byteLength);
-      $('r-time').textContent = ms + ' ms';
-      result.classList.add('show');
-      setStatus('解密成功，文件可正常编辑、打印、复制。', 'ok');
-    } catch (e) {
-      setStatus(e && e.message ? e.message : String(e), 'err');
-    } finally {
-      go.disabled = false; pick.disabled = false;
     }
+    result.classList.add('show');
+    setStatus(okCount === total ? '全部 ' + total + ' 个文件解密成功。' : okCount + '/' + total + ' 个成功，失败项见下方列表。', okCount === total ? 'ok' : 'err');
+    go.disabled = false; pick.disabled = false;
   });
 })();
 </script>
