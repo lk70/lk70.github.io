@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF Password Removal Tool — How Decryption Works (English)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%232563eb'/%3E%3Cpath d='M12 6.5a3.5 3.5 0 0 0-3.5 3.5v2h-1a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1h-1v-2a3.5 3.5 0 0 0-3.5-3.5zm-1.8 5.5h3.6v1.8h-3.6V12z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --ink: #1e293b;
+    --ink-2: #64748b;
+    --line: #e2e8f0;
+    --accent: #2563eb;
+    --ok: #16a34a;
+    --err: #dc2626;
+    --warn: #b45309;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+    padding: 28px 16px 60px;
+  }
+  .wrap { width: 100%; max-width: 880px; margin: 0 auto; }
+
+  .topbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+  .topbar a {
+    display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none; font-size: 13px; font-weight: 600;
+    color: var(--accent); background: #eff6ff; border: 1px solid #dbeafe;
+    padding: 8px 14px; border-radius: 999px;
+  }
+  .topbar a:hover { background: #dbeafe; }
+
+  header.doc { text-align: center; margin-bottom: 26px; }
+  header.doc h1 { font-size: 25px; letter-spacing: .2px; }
+  header.doc .sub { color: var(--ink-2); font-size: 14px; margin-top: 8px; }
+  header.doc .kicker {
+    display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    color: var(--accent); background: #eff6ff; border-radius: 999px; padding: 4px 12px; margin-bottom: 12px;
+  }
+
+  .note {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #f8fafc; border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    border-radius: 10px; padding: 14px 16px; font-size: 14px; color: var(--ink-2); margin-bottom: 22px;
+  }
+  .note b { color: var(--ink); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 24px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(15,23,42,.06);
+  }
+  .card > h2 {
+    font-size: 18px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  }
+  .card > h2 .n {
+    display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center;
+    background: var(--accent); color: #fff; border-radius: 8px; font-size: 14px; margin-right: 10px;
+  }
+  .card h3 { font-size: 15px; margin: 18px 0 8px; color: #334155; }
+  .card p { font-size: 14.5px; color: #334155; margin-bottom: 10px; }
+  .card ul, .card ol { margin: 6px 0 10px 22px; font-size: 14.5px; color: #334155; }
+  .card li { margin-bottom: 5px; }
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: #f1f5f9; border: 1px solid var(--line); border-radius: 5px;
+    padding: 1px 6px; font-size: 13px; color: #0f172a;
+  }
+  .tbl-wrap { overflow-x: auto; margin: 12px 0 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
+  th, td { border: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; color: #334155; white-space: nowrap; }
+  tbody tr:nth-child(even) td { background: #fcfdff; }
+
+  .flow { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+  .flow .step {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 10px 13px;
+    font-size: 14px;
+  }
+  .flow .step .i {
+    flex: none; width: 24px; height: 24px; line-height: 24px; text-align: center;
+    background: #eff6ff; color: var(--accent); border-radius: 7px; font-weight: 700; font-size: 12.5px;
+  }
+  .flow .step b { color: var(--ink); }
+  .flow .step .d { color: var(--ink-2); font-size: 13px; }
+  .flow .arrow { text-align: center; color: #94a3b8; font-size: 14px; line-height: 1; }
+
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  .tag.ok { background: #f0fdf4; color: var(--ok); border: 1px solid #bbf7d0; }
+  .tag.no { background: #fef2f2; color: var(--err); border: 1px solid #fecaca; }
+  .tag.w { background: #fffbeb; color: var(--warn); border: 1px solid #fde68a; }
+
+  pre.code {
+    background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 14px 16px;
+    overflow-x: auto; font-size: 12.5px; line-height: 1.6; margin: 10px 0;
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+  }
+  pre.code .c { color: #94a3b8; }
+
+  footer.doc { text-align: center; color: var(--ink-2); font-size: 12.5px; margin-top: 26px; line-height: 1.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a href="pdf-unlock.html">&larr; Back to the tool</a>
+    <a href="index.html">Home</a>
+    <a href="pdf-unlock-guide-cn.html">中文说明</a>
+  </div>
+
+  <header class="doc">
+    <span class="kicker">TECHNICAL EXPLAINER</span>
+    <h1>Browser-based PDF Password Removal — How Decryption Works</h1>
+    <p class="sub">This tool removes PDF permission restrictions (the Owner password) entirely in your browser. Files are never uploaded to a server.</p>
+  </header>
+
+  <div class="note">
+    <span>&#9432;</span>
+    <div>Based on the "PDF version &#8594; encryption method" mapping table, this document explains the decryption logic layer by layer, following the implementation in the tool's core module <code>unlock_core.js</code>.</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">1</span>PDF Encryption at a Glance</h2>
+    <p>PDF security is implemented by the <b>Standard Security Handler</b>. All encryption information lives in the file's <b>Encryption Dictionary</b>, referenced by <code>/Encrypt &lt;obj&gt; 0 R</code> in the trailer.</p>
+    <p>Encryption only affects two kinds of content:</p>
+    <ul>
+      <li><b>Streams</b>: page content, fonts, images, etc. (filter chosen by <code>/StmF</code>)</li>
+      <li><b>Strings</b>: bookmark titles, document info, URIs, etc. (chosen by <code>/StrF</code>)</li>
+    </ul>
+    <p>Decryption must solve two problems:</p>
+    <ol>
+      <li><b>File Key</b>: derived from the user password (empty in our case) plus the encryption dictionary;</li>
+      <li><b>Object Key</b>: each object (by object number + generation number) derives its own key from the file key, so that one key is never used directly for everything.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span>PDF Version &#8594; Encryption Method Map</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>PDF version (compat.)</th><th>Cipher</th><th>Key length</th><th>Encryption dictionary</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>PDF 1.1 / 1.2 / 1.3</td><td>RC4</td><td>40-bit</td><td><code>/V 1 /R 2 /Length 40</code> (no <code>/CF</code>)</td></tr>
+          <tr><td>PDF 1.4 / 1.5</td><td>RC4</td><td>128-bit</td><td><code>/V 2 /R 3 /Length 128</code>; or <code>/V 4 /CFM /V2 /Length 128</code></td></tr>
+          <tr><td>PDF 1.6 / 1.7</td><td>AES (AES-CBC)</td><td>128-bit</td><td><code>/V 4 /CFM /AESV2 /Length 128</code></td></tr>
+          <tr><td>PDF 1.7+ (low security)</td><td>AES</td><td>256-bit</td><td><code>/V 5 /R 5 /CFM /AESV3 /Length 256</code> (single SHA-256)</td></tr>
+          <tr><td>PDF 1.7+ (high security)</td><td>AES (AES-256 + PBKDF2)</td><td>256-bit</td><td><code>/V 5 /R 6 /CFM /AESV3 /Length 256</code> (iterated hash)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul>
+      <li><code>/V</code> (algorithm version) selects the key derivation and cipher family; <code>/R</code> (revision) selects the password-check details;</li>
+      <li>RC4-40's "40-bit" key is really 5 bytes (<code>Length 40</code>); RC4-128 is 16 bytes;</li>
+      <li>"low security" = R5 (key = a single SHA-256); "high security" = R6 (PBKDF2-style iterated hashing, brute-force resistant).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span>Key Fields of the Encryption Dictionary</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Meaning</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/Filter /Standard</code></td><td>Standard security handler</td><td><code>/Filter /Standard</code></td></tr>
+          <tr><td><code>/V</code></td><td>Cipher version (1&#8211;5)</td><td><code>/V 5</code></td></tr>
+          <tr><td><code>/R</code></td><td>Revision (2&#8211;6)</td><td><code>/R 6</code></td></tr>
+          <tr><td><code>/Length</code></td><td>Key length in bits (classic schemes)</td><td><code>/Length 256</code></td></tr>
+          <tr><td><code>/O</code></td><td>Owner-password data (32B when V&lt;5; 48B when V=5)</td><td><code>/O &lt;e67f...&gt;</code></td></tr>
+          <tr><td><code>/U</code></td><td>User-password data (32B when V&lt;5; 48B when V=5)</td><td><code>/U &lt;542c...&gt;</code></td></tr>
+          <tr><td><code>/OE</code> / <code>/UE</code></td><td>V5: AES-encrypted Owner/User file key (32B)</td><td><code>/UE &lt;7d3a...&gt;</code></td></tr>
+          <tr><td><code>/P</code></td><td>Permission bits (32-bit mask, includes flags and three fixed bits)</td><td><code>/P -3904</code></td></tr>
+          <tr><td><code>/CF /StdCF /CFM</code></td><td>Crypt filter: <code>/V2</code> (RC4), <code>/AESV2</code> (AES-128), <code>/AESV3</code> (AES-256)</td><td><code>/CFM /AESV3</code></td></tr>
+          <tr><td><code>/StmF</code> / <code>/StrF</code></td><td>Filter for streams / strings (default <code>/Identity</code> = no encryption)</td><td><code>/StmF /StdCF</code></td></tr>
+          <tr><td><code>/EncryptMetadata</code></td><td>Whether metadata is encrypted (affects key derivation for AES-128)</td><td><code>/EncryptMetadata false</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4</span>The Decryption Pipeline</h2>
+    <div class="flow">
+      <div class="step"><span class="i">1</span><div><b>Read the PDF bytes</b> <span class="d">&#8594; locate the encryption dictionary <code>/Encrypt</code> and parse <code>/V /R /Length /O /U /P /CFM /StmF /StrF /UE</code></div></div>
+      <div class="arrow">&#9660;</div>
+      <div class="step"><span class="i">2</span><div><b>Derive the file key</b> <span class="d">&#8594; V1&#8211;V4: Algorithm 2 (<code>MD5(pw+O+P+ID0)</code>, iterated 50&#215; when R&#8805;3); V5: Algorithm 2.B (R5 = one SHA-256, R6 = iterated AES-CBC hashing)</div></div>
+      <div class="arrow">&#9660;</div>
+      <div class="step"><span class="i">3</span><div><b>Validate the empty password</b> <span class="d">&#8594; V1&#8211;V4: Algorithm 6 compares <code>/U</code>; V5: Algorithm 11 checks <code>/U</code> and decrypts <code>/UE</code> to obtain the 32-byte file key</div></div>
+      <div class="arrow">&#9660;</div>
+      <div class="step"><span class="i">4</span><div><b>Derive per-object keys</b> <span class="d">&#8594; V=1 uses the extended key (spec note 1); V&#8805;2 uses <code>MD5(fileKey[:n]+salt)[:n+5]</code> (AES-128 appends <code>sAlT</code>); V=5 uses the 32-byte file key directly</div></div>
+      <div class="arrow">&#9660;</div>
+      <div class="step"><span class="i">5</span><div><b>Decrypt streams and strings</b> <span class="d">&#8594; RC4 / AES-128 / AES-256-CBC; strings come as literal <code>(...)</code> or hex <code>&lt;...&gt;</code></div></div>
+      <div class="arrow">&#9660;</div>
+      <div class="step"><span class="i">6</span><div><b>Rebuild the output</b> <span class="d">&#8594; drop <code>/Encrypt</code>, shift offsets by the new (decrypted) lengths and fix the xref &#8594; download an unrestricted PDF</div></div>
+    </div>
+
+    <h3>4.1 Parsing the encryption dictionary</h3>
+    <p>Find <code>/Encrypt &lt;N&gt; 0 R</code> in the trailer, read the dictionary at the object offset, and extract by regex:</p>
+    <ul>
+      <li>Cipher family: <code>/V</code>, <code>/R</code>, <code>/CFM</code> (<code>/V2</code> &#8594; RC4, <code>/AESV2</code> &#8594; AES-128, <code>/AESV3</code> &#8594; AES-256)</li>
+      <li>Key parameters: <code>/Length</code>, <code>/P</code>, <code>/O</code>, <code>/U</code>, <code>/UE</code> (V5)</li>
+      <li>String encryption switch: <code>/StrF</code> (missing or <code>/Identity</code> means strings are not encrypted)</li>
+    </ul>
+    <p><code>/O</code>, <code>/U</code> and <code>/UE</code> may be either <b>hex strings</b> (<code>&lt;...&gt;</code>) or <b>literal strings</b> (<code>(...)</code>); the latter require unescaping (<code>\(</code>, <code>\)</code>, <code>\\</code>, octal <code>\ddd</code>, etc.).</p>
+
+    <h3>4.2 File key derivation</h3>
+    <p><b>V1&#8211;V4 (classic encryption, Algorithm 2)</b></p>
+    <pre class="code">key = MD5( password(empty) + O[0:32] + P(4-byte little-endian) + ID[0] )
+if R >= 3: repeat 50 times: key = MD5(key + first 3 bytes)
+take the first n bytes (n = Length/8; n capped at 16)</pre>
+    <p>Note: for AES-128 (V4) with <code>/EncryptMetadata false</code>, append 4 extra bytes <code>FF FF FF FF</code> to the input. <code>ID[0]</code> comes from the trailer's <code>/ID</code> and participates in key derivation, so <b>changing any byte of the file changes the key</b>.</p>
+    <p><b>V5 (Algorithm 2.B)</b></p>
+    <ul>
+      <li><b>R5</b>: <code>key = SHA-256( password + U[32:40] + U[40:48] )</code> (a single hash &#8212; fast but brute-forceable)</li>
+      <li><b>R6</b>: iterated hashing, equivalent to a strong PBKDF2:</li>
+    </ul>
+    <pre class="code">hash = SHA-256( password + salt + udata )
+count = 0
+loop:
+  count++
+  k1 = password + hash + udata
+  e  = AES-128-CBC encrypt( key=hash[0:16], IV=hash[16:32], data=k1 repeated 64 times, no padding )
+  sel = (e[0]+...+e[15]) % 3            <span class="c"># picks the hash for this round</span>
+  hash = SHA-256 / SHA-384 / SHA-512 ( e )
+  stop when count &#8805; 64 and e[last] &#8804; count-32
+key = hash[0:32]</pre>
+    <p>R6's stop condition and rotating hashes mean <b>each derivation performs thousands of AES block encryptions and hashes</b>. This is exactly why it is "high security" and brute-force resistant &#8212; and a major source of the tool's processing time.</p>
+
+    <h3>4.3 Password validation (can we open it?)</h3>
+    <ul>
+      <li><b>V1&#8211;V4 (Algorithm 6)</b>: compute <code>MD5(empty + padding + ID[0])</code>, then run 20 RC4 iterations with an incrementing index byte, and compare with <code>/U</code>. A match means the file opens with an empty password (the range this tool handles).</li>
+      <li><b>V5 (Algorithm 11)</b>:
+        <ul>
+          <li>check <code>U[0:32] == SHA-256( empty + U[32:40] )</code>;</li>
+          <li><code>tmpKey = SHA-256( empty + U[40:48] )</code>;</li>
+          <li><b>file key = AES-256-CBC decrypt(key=tmpKey, IV=zero, ciphertext=/UE, no padding)</b>.</li>
+        </ul>
+      </li>
+    </ul>
+    <p>This step also finalises the file key (cross-checked byte-for-byte against pypdf for R5/R6 in the implementation).</p>
+
+    <h3>4.4 Per-object key derivation (Algorithms 1 / 3)</h3>
+    <p>Each object builds a salt from <code>object number (3 bytes LE) + generation number (2 bytes LE)</code>:</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Cipher type</th><th>Object key</th></tr></thead>
+        <tbody>
+          <tr><td>V=1 (RC4-40, no <code>/CF</code>)</td><td><b>Extended key</b> = fileKey + salt (spec note 1: with V=1, MD5 is replaced by RC4, and the extended key is used directly as the RC4 key); generator-compatible writers (e.g. pypdf) use the fallback <code>MD5(fileKey+salt)[:n+5]</code></td></tr>
+          <tr><td>V&#8805;2 RC4</td><td><code>MD5( fileKey[:n] + salt )[: min(n+5, 16)]</code></td></tr>
+          <tr><td>V=4 AES-128</td><td>Same, with 4 extra bytes <code>sAlT</code> appended to the salt</td></tr>
+          <tr><td>V=5 AES-256</td><td><b>Use the 32-byte file key directly</b> (no MD5, no object salt &#8212; Algorithm 3.1a)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>RC4-40 key selection was a recent fix: <b>a single wrong derivation breaks every stream</b>. The implementation uses "content validation + primary/fallback adaptation": it decrypts with the spec key first, and if the content check fails (the result is not valid FlateDecode/image data) it retries with the MD5 fallback key, letting string decryption follow the same conclusion.</p>
+
+    <h3>4.5 Stream decryption and content validation</h3>
+    <ul>
+      <li><b>RC4</b>: length-preserving. Since there is no integrity check, content validation is mandatory: the result must be a valid FlateDecode header (<code>78 9C</code>, etc.) or a valid image encoding (JPX must start with <code>FF 4F FF 51</code>); otherwise the stream is treated as unencrypted and left as-is.</li>
+      <li><b>AES-128</b>: CBC + PKCS#7 padding via the browser Web Crypto API (<code>crypto.subtle</code>). Decryption shortens data, so the tool <b>decrypts in descending object order and rebuilds byte-by-byte</b>, shifting following bytes and xref offsets accordingly.</li>
+      <li><b>AES-256 (V5)</b>: object key = file key; AES-256-CBC + PKCS#7. A 16-byte random IV is embedded at the head of the stream.</li>
+    </ul>
+
+    <h3>4.6 String decryption</h3>
+    <p>Strings are encrypted only under "classic encryption (V&lt;4)" or when the dictionary explicitly sets <code>/StrF</code> to something other than <code>/Identity</code> (otherwise they are skipped &#8212; which is why some files keep intact bookmarks). Ciphertext comes in two forms:</p>
+    <ul>
+      <li><b>Literal strings</b> <code>(...)</code>: with AES, <code>IV + ciphertext</code> is concatenated; after decryption the result is re-escaped into a safe literal; with RC4, decryption is length-preserving;</li>
+      <li><b>Hex strings</b> <code>&lt;...&gt;</code>: decrypted by the same rules and written back as hex.</li>
+    </ul>
+    <p>The decrypted result must keep byte/text length consistency, and scanning continues after each replacement (adapting to shifted offsets).</p>
+
+    <h3>4.7 Rebuilding the output</h3>
+    <ul>
+      <li>Remove the <code>/Encrypt</code> reference from the trailer;</li>
+      <li>Keep and fix the xref table/stream (object offsets are shifted by the decryption-induced length changes);</li>
+      <li>Both classic xref tables and xref streams are supported;</li>
+      <li>The rebuilt PDF is no longer marked encrypted and opens, edits, prints and copies normally.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">5</span>Per-method Implementation Matrix</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Method</th><th>V/R</th><th>File key</th><th>Object key</th><th>Stream decryption</th><th>Password check</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>RC4-40</td><td>1/2</td><td>Alg. 2, 5 bytes</td><td>Extended key (spec) / MD5 fallback</td><td>RC4 length-preserving + validation</td><td>Alg. 6 (20 RC4 iterations)</td></tr>
+          <tr><td>RC4-128</td><td>2/3 or 4/CFM V2</td><td>Alg. 2, 16 bytes (50 iterations when R3)</td><td>MD5+salt[:n+5]</td><td>RC4 length-preserving + validation</td><td>Alg. 6</td></tr>
+          <tr><td>AES-128</td><td>4/AESV2</td><td>Alg. 2 + EncryptMetadata fix-up</td><td>MD5+salt+sAlT</td><td>AES-CBC PKCS7 (Web Crypto)</td><td>Alg. 6</td></tr>
+          <tr><td>AES-256 low</td><td>5/R5</td><td>Alg. 2.B: single SHA-256</td><td>File key (32B)</td><td>AES-256-CBC (Web Crypto)</td><td>Alg. 11</td></tr>
+          <tr><td>AES-256 high</td><td>5/R6</td><td>Alg. 2.B: iterated hash (AES-CBC + rotating hashes)</td><td>File key (32B)</td><td>AES-256-CBC (Web Crypto)</td><td>Alg. 11</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Note: R6 iteration and <code>/UE</code> decryption require <b>AES-CBC without padding</b>, which Web Crypto does not provide. The core therefore ships a pure-JS AES block implementation (SBOX / key schedule / CBC chaining, verified against NIST test vectors) &#8212; the key to being a single self-contained file.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">6</span>Scope and Boundaries</h2>
+    <p><span class="tag ok">SUPPORTED</span></p>
+    <ul>
+      <li>PDFs with an empty user password and only Owner restrictions (openable but edit/print/copy forbidden);</li>
+      <li>All five encryption methods: RC4-40, RC4-128, AES-128, AES-256 (R5/R6);</li>
+      <li>Classic xref tables and xref streams.</li>
+    </ul>
+    <p><span class="tag no">NOT SUPPORTED / REJECTED</span></p>
+    <ul>
+      <li>PDFs that require an open password (non-empty user password) &#8212; the tool tells you to open them with the password first;</li>
+      <li>Files using a non-standard security handler (proprietary third-party encryption).</li>
+    </ul>
+    <p><span class="tag w">PRIVACY</span> All logic runs in local browser JavaScript; files never leave your machine and are never uploaded.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">7</span>How It Was Verified</h2>
+    <ul>
+      <li><b>NIST test vectors</b>: the pure-JS AES-128/256 block encrypt/decrypt matches the standard vectors;</li>
+      <li><b>File key cross-check</b>: derived file keys match pypdf byte-for-byte (RC4 / AES-128 / R5 / R6 all identical);</li>
+      <li><b>End-to-end output check</b>: unlocked samples rendered with PyMuPDF are <b>pixel-identical</b> to the original unencrypted reference pages; bookmarks and Chinese metadata are fully restored (both literal and hex string forms verified);</li>
+      <li><b>Boundary tests</b>: files with a user password are correctly rejected.</li>
+    </ul>
+  </div>
+
+  <footer class="doc">
+    <div><a href="pdf-unlock.html" style="color:#2563eb;text-decoration:none;font-weight:600;">&larr; Back to the PDF password removal tool</a></div>
+    <div>Copyright &copy; 2026 Kelvin. All Rights Reserved.</div>
+  </footer>
+
+</div>
+</body>
+</html>

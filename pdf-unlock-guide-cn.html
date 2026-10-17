@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF 密码移除工具 — 解密原理说明（中文）</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%232563eb'/%3E%3Cpath d='M12 6.5a3.5 3.5 0 0 0-3.5 3.5v2h-1a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1h-1v-2a3.5 3.5 0 0 0-3.5-3.5zm-1.8 5.5h3.6v1.8h-3.6V12z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --ink: #1e293b;
+    --ink-2: #64748b;
+    --line: #e2e8f0;
+    --accent: #2563eb;
+    --ok: #16a34a;
+    --err: #dc2626;
+    --warn: #b45309;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+    padding: 28px 16px 60px;
+  }
+  .wrap { width: 100%; max-width: 860px; margin: 0 auto; }
+
+  .topbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+  .topbar a {
+    display: inline-flex; align-items: center; gap: 6px;
+    text-decoration: none; font-size: 13px; font-weight: 600;
+    color: var(--accent); background: #eff6ff; border: 1px solid #dbeafe;
+    padding: 8px 14px; border-radius: 999px;
+  }
+  .topbar a:hover { background: #dbeafe; }
+
+  header.doc { text-align: center; margin-bottom: 26px; }
+  header.doc h1 { font-size: 26px; letter-spacing: .3px; }
+  header.doc .sub { color: var(--ink-2); font-size: 14px; margin-top: 8px; }
+  header.doc .kicker {
+    display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 2px;
+    color: var(--accent); background: #eff6ff; border-radius: 999px; padding: 4px 12px; margin-bottom: 12px;
+  }
+
+  .note {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #f8fafc; border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    border-radius: 10px; padding: 14px 16px; font-size: 14px; color: var(--ink-2); margin-bottom: 22px;
+  }
+  .note b { color: var(--ink); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 24px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(15,23,42,.06);
+  }
+  .card > h2 {
+    font-size: 18px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  }
+  .card > h2 .n {
+    display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center;
+    background: var(--accent); color: #fff; border-radius: 8px; font-size: 14px; margin-right: 10px;
+  }
+  .card h3 { font-size: 15px; margin: 18px 0 8px; color: #334155; }
+  .card p { font-size: 14.5px; color: #334155; margin-bottom: 10px; }
+  .card ul, .card ol { margin: 6px 0 10px 22px; font-size: 14.5px; color: #334155; }
+  .card li { margin-bottom: 5px; }
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    background: #f1f5f9; border: 1px solid var(--line); border-radius: 5px;
+    padding: 1px 6px; font-size: 13px; color: #0f172a;
+  }
+  .tbl-wrap { overflow-x: auto; margin: 12px 0 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 520px; }
+  th, td { border: 1px solid var(--line); padding: 9px 12px; text-align: left; vertical-align: top; }
+  th { background: #f8fafc; font-weight: 700; color: #334155; white-space: nowrap; }
+  tbody tr:nth-child(even) td { background: #fcfdff; }
+
+  .flow { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+  .flow .step {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 10px 13px;
+    font-size: 14px;
+  }
+  .flow .step .i {
+    flex: none; width: 24px; height: 24px; line-height: 24px; text-align: center;
+    background: #eff6ff; color: var(--accent); border-radius: 7px; font-weight: 700; font-size: 12.5px;
+  }
+  .flow .step b { color: var(--ink); }
+  .flow .step .d { color: var(--ink-2); font-size: 13px; }
+  .flow .arrow { text-align: center; color: #94a3b8; font-size: 14px; line-height: 1; }
+
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  .tag.ok { background: #f0fdf4; color: var(--ok); border: 1px solid #bbf7d0; }
+  .tag.no { background: #fef2f2; color: var(--err); border: 1px solid #fecaca; }
+  .tag.w { background: #fffbeb; color: var(--warn); border: 1px solid #fde68a; }
+
+  pre.code {
+    background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 14px 16px;
+    overflow-x: auto; font-size: 12.5px; line-height: 1.6; margin: 10px 0;
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+  }
+  pre.code .c { color: #94a3b8; }
+
+  footer.doc { text-align: center; color: var(--ink-2); font-size: 12.5px; margin-top: 26px; line-height: 1.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a href="pdf-unlock.html">&larr; 返回密码移除工具</a>
+    <a href="index.html">返回首页</a>
+    <a href="pdf-unlock-guide-en.html">English Guide</a>
+  </div>
+
+  <header class="doc">
+    <span class="kicker">TECHNICAL EXPLAINER</span>
+    <h1>网页版 PDF 密码移除工具 · 解密原理详解</h1>
+    <p class="sub">本工具在浏览器本地完成 PDF 权限限制（Owner 密码）的移除，文件不上传服务器。</p>
+  </header>
+
+  <div class="note">
+    <span>&#9432;</span>
+    <div>本文依据「不同 PDF 版本的加密方法对应关系」对照表，结合工具核心逻辑 <code>unlock_core.js</code> 的实现，逐层说明解密原理。</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">1</span>PDF 加密体系概述</h2>
+    <p>PDF 的安全机制由 <b>标准安全处理器（Standard Security Handler）</b> 实现。加密信息集中存放在文件内的 <b>加密字典（Encryption Dictionary）</b> 中，由 trailer 的 <code>/Encrypt &lt;对象号&gt; 0 R</code> 引用。</p>
+    <p>加密只影响两类内容：</p>
+    <ul>
+      <li><b>流（Stream）</b>：页面内容、字体、图片等数据（<code>/StmF</code> 指定使用的密码过滤器）</li>
+      <li><b>字符串（String）</b>：书签标题、文档信息、URI 等（<code>/StrF</code> 指定）</li>
+    </ul>
+    <p>解密需要解决两个问题：</p>
+    <ol>
+      <li><b>文件密钥（File Key）</b>：由用户密码（此处为空密码）+ 加密字典内容派生；</li>
+      <li><b>对象密钥（Object Key）</b>：每个对象（按对象号 + 生成号）用文件密钥再派生一个独立密钥，用该密钥解密对应流/字符串，避免同一密钥直接加密全部内容。</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span>PDF 版本与加密方法对照表</h2>
+    <p>下表为「PDF 版本 → 加密算法 → 密钥长度 → 加密字典字段」的对应关系：</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>PDF 版本（兼容性）</th><th>加密算法</th><th>密钥长度</th><th>加密字典对应</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>PDF 1.1 / 1.2 / 1.3</td><td>RC4</td><td>40 位</td><td><code>/V 1 /R 2 /Length 40</code>（无 <code>/CF</code>）</td></tr>
+          <tr><td>PDF 1.4 / 1.5</td><td>RC4</td><td>128 位</td><td><code>/V 2 /R 3 /Length 128</code>；或 <code>/V 4 /CFM /V2 /Length 128</code></td></tr>
+          <tr><td>PDF 1.6 / 1.7</td><td>AES（AES-CBC）</td><td>128 位</td><td><code>/V 4 /CFM /AESV2 /Length 128</code></td></tr>
+          <tr><td>PDF 1.7 及以后（低安全性）</td><td>AES</td><td>256 位</td><td><code>/V 5 /R 5 /CFM /AESV3 /Length 256</code>（单次 SHA-256）</td></tr>
+          <tr><td>PDF 1.7 及以后（高安全性）</td><td>AES（AES-256 + PBKDF2）</td><td>256 位</td><td><code>/V 5 /R 6 /CFM /AESV3 /Length 256</code>（迭代哈希）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul>
+      <li><code>/V</code>（算法版本）决定密钥派生与加密算法族；<code>/R</code>（修订号）决定密码验证细节；</li>
+      <li>RC4-40 的 40 位密钥实为 5 字节（<code>Length 40</code>），RC4-128 为 16 字节（<code>Length 128</code>）；</li>
+      <li>「低安全性」= R5（密钥 = 一次 SHA-256）；「高安全性」= R6（密钥 = PBKDF2 式迭代哈希，抗暴力破解）。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span>加密字典关键字段</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>字段</th><th>含义</th><th>示例</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/Filter /Standard</code></td><td>标准安全处理器</td><td><code>/Filter /Standard</code></td></tr>
+          <tr><td><code>/V</code></td><td>加密算法版本（1–5）</td><td><code>/V 5</code></td></tr>
+          <tr><td><code>/R</code></td><td>算法修订号（2–6）</td><td><code>/R 6</code></td></tr>
+          <tr><td><code>/Length</code></td><td>密钥长度（位，经典加密时）</td><td><code>/Length 256</code></td></tr>
+          <tr><td><code>/O</code></td><td>Owner 密码相关（32B，V&lt;5；48B，V=5）</td><td><code>/O &lt;e67f...&gt;</code></td></tr>
+          <tr><td><code>/U</code></td><td>User 密码相关（32B，V&lt;5；48B，V=5）</td><td><code>/U &lt;542c...&gt;</code></td></tr>
+          <tr><td><code>/OE</code> / <code>/UE</code></td><td>V5：Owner/User 文件密钥的 AES 加密版本（32B）</td><td><code>/UE &lt;7d3a...&gt;</code></td></tr>
+          <tr><td><code>/P</code></td><td>权限位（32 位掩码，含权限标志与三位固定位）</td><td><code>/P -3904</code></td></tr>
+          <tr><td><code>/CF /StdCF /CFM</code></td><td>密码过滤器：<code>/V2</code>（RC4）、<code>/AESV2</code>（AES-128）、<code>/AESV3</code>（AES-256）</td><td><code>/CFM /AESV3</code></td></tr>
+          <tr><td><code>/StmF</code> / <code>/StrF</code></td><td>流/字符串使用的过滤器（默认 <code>/Identity</code> 即不加密）</td><td><code>/StmF /StdCF</code></td></tr>
+          <tr><td><code>/EncryptMetadata</code></td><td>是否加密元数据（AES-128 时影响文件密钥派生）</td><td><code>/EncryptMetadata false</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4</span>网页版解密流程</h2>
+    <div class="flow">
+      <div class="step"><span class="i">1</span><div><b>读取 PDF 字节</b> <span class="d">→ 定位加密字典 <code>/Encrypt</code>，解析 <code>/V /R /Length /O /U /P /CFM /StmF /StrF /UE</code></div></div>
+      <div class="arrow">▼</div>
+      <div class="step"><span class="i">2</span><div><b>派生文件密钥</b> <span class="d">→ V1–V4：算法 2（<code>MD5(pw+O+P+ID0)</code>，R≥3 再迭代 50 次）；V5：算法 2.B（R5 = 一次 SHA-256，R6 = AES-CBC 迭代哈希）</div></div>
+      <div class="arrow">▼</div>
+      <div class="step"><span class="i">3</span><div><b>校验空密码</b> <span class="d">→ V1–V4：算法 6 比对 <code>/U</code>；V5：算法 11 校验 <code>/U</code> 并解密 <code>/UE</code>，得到 32 字节文件密钥</div></div>
+      <div class="arrow">▼</div>
+      <div class="step"><span class="i">4</span><div><b>逐对象派生对象密钥</b> <span class="d">→ V=1 用扩展密钥（规范注 1）；V≥2 用 <code>MD5(fileKey[:n]+salt)[:n+5]</code>（AES-128 再追加 <code>sAlT</code>）；V=5 直接用 32B 文件密钥</div></div>
+      <div class="arrow">▼</div>
+      <div class="step"><span class="i">5</span><div><b>解密流与字符串</b> <span class="d">→ RC4 / AES-128 / AES-256-CBC；字符串含括号与 hex 两种形式</div></div>
+      <div class="arrow">▼</div>
+      <div class="step"><span class="i">6</span><div><b>重建输出</b> <span class="d">→ 移除 <code>/Encrypt</code>，按解密长度平移偏移并修正 xref → 下载无权限限制的 PDF</div></div>
+    </div>
+
+    <h3>4.1 解析加密字典</h3>
+    <p>从 trailer 找到 <code>/Encrypt &lt;N&gt; 0 R</code>，按对象偏移读取加密字典文本，正则提取：</p>
+    <ul>
+      <li>算法族：<code>/V</code>、<code>/R</code>、<code>/CFM</code>（<code>/V2</code> → RC4、<code>/AESV2</code> → AES-128、<code>/AESV3</code> → AES-256）</li>
+      <li>密钥参数：<code>/Length</code>、<code>/P</code>、<code>/O</code>、<code>/U</code>、<code>/UE</code>（V5 时）</li>
+      <li>字符串加密开关：<code>/StrF</code>（缺失或 <code>/Identity</code> 时字符串不加密）</li>
+    </ul>
+    <p><code>/O</code>、<code>/U</code>、<code>/UE</code> 同时支持 <b>hex 字符串</b>（<code>&lt;...&gt;</code>）与 <b>括号字符串</b>（<code>(...)</code>）两种形式，后者需做转义还原（<code>\(</code>、<code>\)</code>、<code>\\</code>、八进制 <code>\ddd</code> 等）。</p>
+
+    <h3>4.2 文件密钥派生</h3>
+    <p><b>V1–V4（经典加密，算法 2）</b></p>
+    <pre class="code">key = MD5( password(空) + O[0:32] + P(4字节小端) + ID[0] )
+对 R≥3：重复 50 次：key = MD5(key + 前3字节)
+取前 n 字节（n = Length/8；n 最大 16）</pre>
+    <p>注意：AES-128（V4）且 <code>/EncryptMetadata false</code> 时，输入末尾再追加 4 字节 <code>FF FF FF FF</code>。<code>ID[0]</code> 来自 trailer 的 <code>/ID</code>，参与密钥派生，因此<b>同一文件改字节会导致密钥变化</b>。</p>
+    <p><b>V5（算法 2.B）</b></p>
+    <ul>
+      <li><b>R5</b>：<code>key = SHA-256( password + U[32:40] + U[40:48] )</code>（一次哈希，快但可暴力破解）</li>
+      <li><b>R6</b>：迭代哈希，等效 PBKDF2 高强度：</li>
+    </ul>
+    <pre class="code">hash = SHA-256( password + salt + udata )
+count = 0
+循环:
+  count++
+  k1 = password + hash + udata
+  e  = AES-128-CBC 加密( 密钥=hash[0:16], IV=hash[16:32], 数据=k1 重复 64 次, 无padding )
+  sel = (e[0]+...+e[15]) % 3        <span class="c"># 决定本轮用哪个哈希</span>
+  hash = SHA-256 / SHA-384 / SHA-512 ( e )
+  当 count ≥ 64 且 e 末字节 ≤ count-32 时停止
+key = hash[0:32]</pre>
+    <p>R6 的停止条件与轮换哈希使得<b>每次派生要做数千次 AES 块加密与哈希</b>，这正是「高安全性」抗暴力破解的原理，也是解密耗时的主要来源之一。</p>
+
+    <h3>4.3 密码验证（确定能否打开）</h3>
+    <ul>
+      <li><b>V1–V4（算法 6）</b>：对空密码计算 <code>MD5(空密码+padding+ID[0])</code>，再按字节递增序号做 20 次 RC4 迭代，与 <code>/U</code> 比对。匹配即说明该文件可用空密码打开（本工具处理范围）。</li>
+      <li><b>V5（算法 11）</b>：
+        <ul>
+          <li>校验 <code>U[0:32] == SHA-256( 空密码 + U[32:40] )</code>；</li>
+          <li><code>tmpKey = SHA-256( 空密码 + U[40:48] )</code>；</li>
+          <li><b>文件密钥 = AES-256-CBC 解密(密钥=tmpKey, IV=全零, 密文=/UE, 无 padding)</b>。</li>
+        </ul>
+      </li>
+    </ul>
+    <p>这一步同时完成了文件密钥的最终确认（实现中与 pypdf 交叉验证，R5/R6 文件密钥逐字节一致）。</p>
+
+    <h3>4.4 对象密钥派生（算法 1 / 3）</h3>
+    <p>每个对象按 <code>对象号(3字节小端) + 生成号(2字节小端)</code> 生成盐（salt）：</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>加密类型</th><th>对象密钥</th></tr></thead>
+        <tbody>
+          <tr><td>V=1（RC4-40，无 <code>/CF</code>）</td><td><b>扩展密钥</b> = fileKey + salt（规范注 1：V=1 时 MD5 替换为 RC4，直接用扩展密钥作 RC4 密钥）；兼容生成器（pypdf 等）另按 <code>MD5(fileKey+salt)[:n+5]</code> 备选</td></tr>
+          <tr><td>V≥2 RC4</td><td><code>MD5( fileKey[:n] + salt )[: min(n+5, 16)]</code></td></tr>
+          <tr><td>V=4 AES-128</td><td>同上，salt 再追加 4 字节 <code>sAlT</code></td></tr>
+          <tr><td>V=5 AES-256</td><td><b>直接用 32 字节文件密钥</b>（无 MD5、无对象盐，算法 3.1a）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>RC4-40 文件的密钥选择是本工具近期修复的重点：<b>同一派生错误会让所有流解密失败</b>。实现采用「内容验证 + 主/备选密钥自适应」：先用规范密钥解密，若内容校验失败（解出的流不是合法 FlateDecode/图像数据）再试 MD5 备选密钥，并让字符串解密跟随流解密的统一结论。</p>
+
+    <h3>4.5 流解密与内容验证</h3>
+    <ul>
+      <li><b>RC4</b>：等长解密（<code>plain = RC4(key, stream)</code>）。因等长无校验，必须做内容验证：解出的字节必须是合法 FlateDecode 头（<code>78 9C</code> 等）或合法图像编码（JPX 需 <code>FF 4F FF 51</code> 头），否则视为未加密流，保留原样。</li>
+      <li><b>AES-128</b>：CBC + PKCS#7 填充，使用浏览器 Web Crypto（<code>crypto.subtle</code>）。解密后长度缩短，必须<b>按对象号降序解密并逐字节平移重建</b>后续字节与 xref 偏移。</li>
+      <li><b>AES-256（V5）</b>：对象密钥 = 文件密钥，AES-256-CBC + PKCS#7。流内嵌 16 字节随机 IV。</li>
+    </ul>
+
+    <h3>4.6 字符串解密</h3>
+    <p>只有「经典加密（V&lt;4）」或「加密字典显式 <code>/StrF</code> 非 <code>/Identity</code>」时字符串才加密（否则跳过，这正是某些文件书签完好的原因）。密文有两种形式：</p>
+    <ul>
+      <li><b>括号字符串</b> <code>(...)</code>：AES 时 <code>IV + 密文</code> 拼接，解密后重转义为安全括号字面量写回；RC4 时等长解密；</li>
+      <li><b>hex 字符串</b> <code>&lt;...&gt;</code>：同样按上述规则解密，写回为 hex。</li>
+    </ul>
+    <p>解密结果必须保持字节长度与文本长度一致，并在替换后继续向后扫描（平移后的偏移自适应）。</p>
+
+    <h3>4.7 输出重建</h3>
+    <ul>
+      <li>移除 trailer 中的 <code>/Encrypt</code> 引用；</li>
+      <li>保留并修正 xref 表/流（对象偏移已按解密长度变化平移）；</li>
+      <li>传统 xref 表与 xref stream 两种结构均支持；</li>
+      <li>重建后的 PDF 不再标记加密，可正常打开、编辑、打印、复制。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">5</span>各加密方法实现细节对照</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>加密方法</th><th>V/R</th><th>文件密钥派生</th><th>对象密钥</th><th>流解密</th><th>密码验证</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>RC4-40</td><td>1/2</td><td>算法2，5 字节</td><td>扩展密钥（规范）/ MD5 备选</td><td>RC4 等长 + 内容验证</td><td>算法6（20 次 RC4 迭代）</td></tr>
+          <tr><td>RC4-128</td><td>2/3 或 4/CFM V2</td><td>算法2，16 字节（R3 迭代 50 次）</td><td>MD5+salt[:n+5]</td><td>RC4 等长 + 内容验证</td><td>算法6</td></tr>
+          <tr><td>AES-128</td><td>4/AESV2</td><td>算法2 + EncryptMetadata 修正</td><td>MD5+salt+sAlT</td><td>AES-CBC PKCS7（Web Crypto）</td><td>算法6</td></tr>
+          <tr><td>AES-256 低安全</td><td>5/R5</td><td>算法2.B：SHA-256 一次</td><td>文件密钥（32B）</td><td>AES-256-CBC（Web Crypto）</td><td>算法11</td></tr>
+          <tr><td>AES-256 高安全</td><td>5/R6</td><td>算法2.B：迭代哈希（AES-CBC + 轮换哈希）</td><td>文件密钥（32B）</td><td>AES-256-CBC（Web Crypto）</td><td>算法11</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>注：R6 迭代与 <code>/UE</code> 解密需要<b>无 padding 的 AES-CBC</b>，Web Crypto 不提供，故核心内置了纯 JS AES 块实现（SBOX/密钥扩展/CBC 链接，经 NIST 测试向量验证），这是单文件自包含的关键。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">6</span>适用范围与边界</h2>
+    <p><span class="tag ok">支持</span></p>
+    <ul>
+      <li>空 user 密码、仅 Owner 权限限制（可打开但禁止编辑/打印/复制）的 PDF；</li>
+      <li>全部五种加密方法：RC4-40、RC4-128、AES-128、AES-256（R5/R6）；</li>
+      <li>传统 xref 表与 xref stream 两种结构。</li>
+    </ul>
+    <p><span class="tag no">不支持 / 明确拒绝</span></p>
+    <ul>
+      <li>需要打开密码（user password 非空）的 PDF——工具会提示先用密码打开；</li>
+      <li>非标准安全处理器（第三方专有加密）的文件。</li>
+    </ul>
+    <p><span class="tag w">隐私</span> 全部逻辑运行在浏览器本地 JavaScript，文件不离开本机，无需上传。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">7</span>验证方式</h2>
+    <ul>
+      <li><b>NIST 测试向量</b>：纯 JS AES-128/256 块加解密与标准向量一致；</li>
+      <li><b>文件密钥交叉验证</b>：与 pypdf 派生的文件密钥逐字节比对（RC4/AES-128/R5/R6 全部一致）；</li>
+      <li><b>端到端输出验证</b>：解锁样例用 PyMuPDF 渲染，与原始未加密参考页<b>逐像素一致</b>；书签/元数据中文完整还原（括号与 hex 两种字符串形式均验证）；</li>
+      <li><b>边界测试</b>：带 user 密码的文件被正确拒绝。</li>
+    </ul>
+  </div>
+
+  <footer class="doc">
+    <div><a href="pdf-unlock.html" style="color:#2563eb;text-decoration:none;font-weight:600;">&larr; 返回密码移除工具</a></div>
+    <div>Copyright &copy; 2026 Kelvin. All Rights Reserved.</div>
+  </footer>
+
+</div>
+</body>
+</html>

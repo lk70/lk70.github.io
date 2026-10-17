@@ -122,6 +122,37 @@
     border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 700; flex: none;
   }
   .res-item .ri-dl:hover { filter: brightness(1.05); }
+  .res-item .ri-hash {
+    flex-basis: 100%; display: flex; align-items: center; gap: 8px;
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px;
+    color: #64748b; background: #eef2f7; border-radius: 6px; padding: 6px 8px;
+    word-break: break-all; line-height: 1.4;
+  }
+  .res-item .ri-hash button {
+    min-height: auto; padding: 4px 10px; font-size: 11px; border-radius: 6px;
+    background: #cbd5e1; color: #1e293b; flex: none;
+  }
+  .res-item { flex-wrap: wrap; }
+
+  .crack {
+    margin-top: 18px; border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; background: #f8fafc;
+  }
+  .crack .ch { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; cursor: pointer; user-select: none; }
+  .crack .ch input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .crack .ch .hint { font-weight: 400; font-size: 12px; color: var(--ink-2); }
+  .crack .cbody { display: none; margin-top: 14px; }
+  .crack.on .cbody { display: block; }
+  .crack .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 10px; }
+  .crack label { font-size: 13px; color: #334155; display: flex; align-items: center; gap: 6px; }
+  .crack input[type=text], .crack select {
+    font: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--line);
+    border-radius: 8px; background: #fff; min-height: 36px;
+  }
+  .crack input[type=text] { min-width: 150px; }
+  .crack .wide { flex: 1 1 260px; }
+  .crack .wide input { width: 100%; }
+  .crack .note { font-size: 12px; color: var(--ink-2); line-height: 1.6; }
 
   footer { margin-top: 26px; text-align: center; color: var(--ink-2); font-size: 12px; line-height: 1.7; }
   footer b { color: #475569; }
@@ -148,11 +179,45 @@
         <path d="M12 16V4m0 0 4 4m-4-4L8 8"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
       </svg>
       <div class="t1">点击选择，或将 PDF 文件拖到此处（支持多选）</div>
-      <div class="t2">支持带权限限制（可打开但禁止编辑/打印/复制）的 PDF · RC4 / AES-128 / AES-256 · 可批量处理</div>
+      <div class="t2">权限限制（可打开但禁止编辑/打印/复制）一键移除 · RC4 / AES-128 / AES-256 · 可批量 · 可对 RC4/AES-128 的打开密码做本地爆破</div>
       <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
     </div>
 
     <div class="filelist" id="filelist" hidden></div>
+
+    <div class="crack" id="crackbox">
+      <div class="ch">
+        <input type="checkbox" id="crackEnabled">
+        <span>打开密码爆破（需要 User Password 的 PDF）</span>
+        <span class="hint">仅本地运行 · 适用 RC4 / AES-128（R2-R4）</span>
+      </div>
+      <div class="cbody">
+        <div class="row">
+          <label>密码里包含的特征串
+            <input type="text" id="crackFeature" placeholder="例如 345" inputmode="numeric">
+          </label>
+          <label>最大位数
+            <select id="crackMaxLen">
+              <option value="4">4 位</option>
+              <option value="5">5 位</option>
+              <option value="6" selected>6 位</option>
+              <option value="7">7 位（较慢）</option>
+              <option value="8">8 位（很慢）</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="crackWeak" checked> 内置弱密码字典</label>
+        </div>
+        <div class="row">
+          <label class="wide">自定义候选（逗号分隔，优先尝试，可直接填完整密码）
+            <input type="text" id="crackExtra" placeholder="例如 123456, 021345, abc345">
+          </label>
+        </div>
+        <div class="note">
+          执行顺序：先试自定义候选与常见弱密码，再按「含特征串的纯数字」由短到长枚举；留空特征串则穷举 1～最大位数的全部数字；命中后自动解密并另存。
+          <b style="color:#dc2626;">本工具的 PDF 爆破仅适用于「8 位以内纯数字密码」的 RC4 / RC4-128 / AES-128（R2–R4）简单情况</b>；纯字母、符号或更长密码不在浏览器穷举范围内，请复制哈希后用 Hashcat 在 GPU 离线跑。AES-256（R5/R6）不支持内置爆破。
+        </div>
+      </div>
+    </div>
 
     <div class="actions">
       <button id="pick">重新选择</button>
@@ -171,8 +236,8 @@
   </div>
 
   <footer>
-    <b>隐私说明：</b>解密逻辑完全运行在您的浏览器本地（JavaScript），文件不离开本机。<br>
-    支持「RC4 / AES-128 / AES-256 加密 + 空打开密码」的权限限制型 PDF，可批量处理、可处理数十至数百 MB 的大文件；需要打开密码（User Password）的 PDF 无法处理。
+    <b>隐私说明：</b>解密与爆破逻辑完全运行在您的浏览器本地（JavaScript），文件不离开本机、不上传任何服务器。<br>
+    权限限制型 PDF（RC4 / AES-128 / AES-256 空打开密码）可直接批量移除；设置了打开密码（User Password）时，可对 RC4 / AES-128（R2-R4）按特征串本地爆破，命中后自动解密另存。AES-256（R5/R6）打开密码不支持内置爆破，可复制 <code>$pdf$</code> 哈希后用 Hashcat(10500/10700) 处理。
   </footer>
 </div>
 
@@ -189,18 +254,32 @@
 (function (global) {
   'use strict';
 
-  // ======================= MD5 (RFC 1321) =======================
-  function md5(message) {
-    const K = new Int32Array(64);
+  // ======================= MD5 (RFC 1321) —— 高性能版 =======================
+  // 常量表只初始化一次（原版每次调用都重算 64 次 Math.sin，是最大浪费）
+  const MD5_K = new Int32Array(64);
+  (() => { for (let i = 0; i < 64; i++) MD5_K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000) | 0; })();
+  const MD5_S = new Int32Array([
+    7,12,17,22, 7,12,17,22, 7,12,17,22, 7,12,17,22,
+    5,9,14,20,  5,9,14,20,  5,9,14,20,  5,9,14,20,
+    4,11,16,23, 4,11,16,23, 4,11,16,23, 4,11,16,23,
+    6,10,15,21, 6,10,15,21, 6,10,15,21, 6,10,15,21
+  ]);
+  // 单块压缩：原地把 M[0..15] 混进 (a,b,c,d)，返回 [a,b,c,d] 新状态
+  function md5Compress(a0, b0, c0, d0, M) {
+    let A = a0, B = b0, C = c0, D = d0;
     for (let i = 0; i < 64; i++) {
-      K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000) | 0;
+      let F, g;
+      if (i < 16)      { F = (B & C) | (~B & D); g = i; }
+      else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) & 15; }
+      else if (i < 48) { F = B ^ C ^ D;          g = (3 * i + 5) & 15; }
+      else             { F = C ^ (B | ~D);       g = (7 * i) & 15; }
+      F = (F + A + MD5_K[i] + M[g]) | 0;
+      A = D; D = C; C = B;
+      B = (B + ((F << MD5_S[i]) | (F >>> (32 - MD5_S[i])))) | 0;
     }
-    const S = [
-      7,12,17,22, 7,12,17,22, 7,12,17,22, 7,12,17,22,
-      5,9,14,20,  5,9,14,20,  5,9,14,20,  5,9,14,20,
-      4,11,16,23, 4,11,16,23, 4,11,16,23, 4,11,16,23,
-      6,10,15,21, 6,10,15,21, 6,10,15,21, 6,10,15,21
-    ];
+    return [(a0 + A) | 0, (b0 + B) | 0, (c0 + C) | 0, (d0 + D) | 0];
+  }
+  function md5(message) {
     const bitLen = message.length * 8;
     const paddedLen = (((message.length + 8) >> 6) + 1) << 6;
     const padded = new Uint8Array(paddedLen);
@@ -214,18 +293,7 @@
     const M = new Int32Array(16);
     for (let off = 0; off < paddedLen; off += 64) {
       for (let i = 0; i < 16; i++) M[i] = dv.getInt32(off + i * 4, true);
-      let A = a0, B = b0, C = c0, D = d0;
-      for (let i = 0; i < 64; i++) {
-        let F, g;
-        if (i < 16) { F = (B & C) | (~B & D); g = i; }
-        else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) & 15; }
-        else if (i < 48) { F = B ^ C ^ D; g = (3 * i + 5) & 15; }
-        else { F = C ^ (B | ~D); g = (7 * i) & 15; }
-        F = (F + A + K[i] + M[g]) | 0;
-        A = D; D = C; C = B;
-        B = (B + ((F << S[i]) | (F >>> (32 - S[i])))) | 0;
-      }
-      a0 = (a0 + A) | 0; b0 = (b0 + B) | 0; c0 = (c0 + C) | 0; d0 = (d0 + D) | 0;
+      [a0, b0, c0, d0] = md5Compress(a0, b0, c0, d0, M);
     }
     const out = new Uint8Array(16);
     const odv = new DataView(out.buffer);
@@ -233,25 +301,50 @@
     odv.setInt32(8, c0, true); odv.setInt32(12, d0, true);
     return out;
   }
+  // PDF R>=3 的「50 轮 MD5」专用：每轮输入固定是上一轮的 16 字节，
+  // padding 后正好单块，schedule 后 12 个 word 全常量——零分配。
+  const chainM = new Int32Array(16);
+  chainM[4] = 0x80; chainM[14] = 128; chainM[15] = 0; // 16 字节消息 = 128 bit
+  function md5Chain16(w) {
+    chainM[0] = w[0]; chainM[1] = w[1]; chainM[2] = w[2]; chainM[3] = w[3];
+    return md5Compress(0x67452301 | 0, 0xefcdab89 | 0, 0x98badcfe | 0, 0x10325476 | 0, chainM);
+  }
 
-  // ======================= RC4 =======================
+  // ======================= RC4（复用同一个 S-box，避免每候选分配） =======================
+  const rc4S = new Uint8Array(256);
   function rc4(key, data) {
-    const S = new Uint8Array(256);
-    for (let i = 0; i < 256; i++) S[i] = i;
+    for (let i = 0; i < 256; i++) rc4S[i] = i;
     let j = 0;
     for (let i = 0; i < 256; i++) {
-      j = (j + S[i] + key[i % key.length]) & 0xFF;
-      const t = S[i]; S[i] = S[j]; S[j] = t;
+      j = (j + rc4S[i] + key[i % key.length]) & 0xFF;
+      const t = rc4S[i]; rc4S[i] = rc4S[j]; rc4S[j] = t;
     }
     const out = new Uint8Array(data.length);
     let i = 0; j = 0;
     for (let k = 0; k < data.length; k++) {
       i = (i + 1) & 0xFF;
-      j = (j + S[i]) & 0xFF;
-      const t = S[i]; S[i] = S[j]; S[j] = t;
-      out[k] = data[k] ^ S[(S[i] + S[j]) & 0xFF];
+      j = (j + rc4S[i]) & 0xFF;
+      const t = rc4S[i]; rc4S[i] = rc4S[j]; rc4S[j] = t;
+      out[k] = data[k] ^ rc4S[(rc4S[i] + rc4S[j]) & 0xFF];
     }
     return out;
+  }
+  // 原地 RC4（仅 16 字节缓冲），verifyUserKey 19 轮用，零分配
+  function rc4InPlace16(key, buf) {
+    for (let i = 0; i < 256; i++) rc4S[i] = i;
+    let j = 0;
+    const klen = key.length;
+    for (let i = 0; i < 256; i++) {
+      j = (j + rc4S[i] + key[i % klen]) & 0xFF;
+      const t = rc4S[i]; rc4S[i] = rc4S[j]; rc4S[j] = t;
+    }
+    let i = 0; j = 0;
+    for (let k = 0; k < 16; k++) {
+      i = (i + 1) & 0xFF;
+      j = (j + rc4S[i]) & 0xFF;
+      const t = rc4S[i]; rc4S[i] = rc4S[j]; rc4S[j] = t;
+      buf[k] ^= rc4S[(rc4S[i] + rc4S[j]) & 0xFF];
+    }
   }
 
   // ======================= zlib inflate（浏览器 DecompressionStream / Node zlib） =======================
@@ -503,12 +596,163 @@
     return md5(input).subarray(0, Math.min(n + 5, 16));
   }
 
+  // ======================= 打开密码爆破（R2-R4：RC4-40/128 / AES-128） =======================
+  // 候选密码按 PDF 规范取 PDFDocEncoding 字节；纯数字 / ASCII 字母与 UTF-8 完全一致。
+  function passwordBytes(pw) {
+    const raw = new Uint8Array(pw.length);
+    for (let i = 0; i < pw.length; i++) raw[i] = pw.charCodeAt(i) & 0xFF;
+    return raw;
+  }
+  // 算法2：用「给定的候选密码」派生文件密钥（computeFileKeyClean 是它的空密码特例）
+  function fileKeyForPassword(dict, id0, pw) {
+    const R = dict.R, Length = dict.Length || 40;
+    const n = Math.max(5, Math.min(16, Math.floor(Length / 8)));
+    const pb = passwordBytes(pw);
+    const padded = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) padded[i] = i < pb.length ? pb[i] : PADDING[i - pb.length];
+    const P_le = new Uint8Array(4);
+    new DataView(P_le.buffer).setUint32(0, (dict.P | 0) >>> 0, true);
+    let input = concatBytes(concatBytes(concatBytes(padded, dict.O), P_le), id0);
+    if (R >= 4 && dict.EncryptMetadata === false) {
+      const ext = new Uint8Array(input.length + 4);
+      ext.set(input, 0);
+      ext.set([0xFF, 0xFF, 0xFF, 0xFF], input.length);
+      input = ext;
+    }
+    let h = md5(input);
+    if (R >= 3) {
+      if (n === 16) {
+        // 快路径：50 轮单块 MD5，零分配（R>=3 实际 Length=128，n=16）
+        const dv = new DataView(h.buffer, h.byteOffset, 16);
+        let w = [dv.getInt32(0, true), dv.getInt32(4, true), dv.getInt32(8, true), dv.getInt32(12, true)];
+        for (let i = 0; i < 50; i++) w = md5Chain16(w);
+        const out = new Uint8Array(16);
+        const odv = new DataView(out.buffer);
+        odv.setInt32(0, w[0], true); odv.setInt32(4, w[1], true);
+        odv.setInt32(8, w[2], true); odv.setInt32(12, w[3], true);
+        return out;
+      }
+      for (let i = 0; i < 50; i++) h = md5(h.subarray(0, n));
+      return h.subarray(0, n);
+    }
+    return h.subarray(0, 5);
+  }
+  // 算法5/6：用派生密钥重算 /U 前 16 字节，与字典中的 /U 比对，判断密码是否正确
+  function verifyUserKey(dict, id0, key) {
+    if (!dict.U || dict.U.length < 16) return false;
+    if (dict.R >= 3) {
+      // md5(PADDING+id0) 对同一 PDF 是常量，缓存一次，别每候选重算
+      if (!dict._uInit) dict._uInit = md5(concatBytes(PADDING, id0));
+      const h = new Uint8Array(dict._uInit);
+      rc4InPlace16(key, h);
+      const ki = new Uint8Array(key.length);
+      for (let i = 1; i <= 19; i++) {
+        for (let k = 0; k < key.length; k++) ki[k] = key[k] ^ i;
+        rc4InPlace16(ki, h);
+      }
+      for (let k = 0; k < 16; k++) if (h[k] !== dict.U[k]) return false;
+      return true;
+    }
+    const uCheck = rc4(key, PADDING).subarray(0, 16);
+    for (let k = 0; k < 16; k++) if (uCheck[k] !== dict.U[k]) return false;
+    return true;
+  }
+  function bytesToHex(b) {
+    return Array.from(b).map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+  // 生成 pdf2john / John(Hashcat 10400) 兼容的 $pdf$ 哈希串，便于离线爆破
+  function buildJohnHash(dict, id0) {
+    const meta = dict.EncryptMetadata === false ? -1 : 0;
+    return '$pdf$4*' + dict.R + '*' + (dict.Length || 40) + '*' + dict.P +
+      '*' + bytesToHex(dict.O) + '*' + bytesToHex(dict.U) + '*' + meta + '*' + bytesToHex(id0);
+  }
+  // 常见弱密码（先于特征串枚举，命中最快）
+  const WEAK_PASSWORDS = [
+    '123456', '123456789', '12345', '12345678', '1234', '123', '1234567890',
+    '000000', '111111', '888888', '666666', '999999', '112233', '123123',
+    '654321', 'abc123', 'password', 'admin', 'qwerty', 'iloveyou', '00000000',
+    '88888888', '66666666', '11111111', 'a123456', '123321', '147258', '159357'
+  ];
+  // 惰性生成「包含特征串的纯数字密码」：按长度递增，用固定位+自由位法并用 Set 去重
+  function* numericContaining(token, maxLen) {
+    const L = token.length;
+    if (!L || maxLen < L) return;
+    yield token;
+    const seen = new Set([token]);
+    for (let n = L + 1; n <= maxLen; n++) {
+      const free = n - L;
+      const total = Math.pow(10, free);
+      for (let p = 0; p <= n - L; p++) {
+        for (let v = 0; v < total; v++) {
+          const arr = new Array(n).fill(null);
+          for (let i = 0; i < L; i++) arr[p + i] = token[i];
+          const digits = String(v).padStart(free, '0');
+          let di = 0;
+          for (let i = 0; i < n; i++) if (arr[i] === null) arr[i] = digits[di++];
+          const cand = arr.join('');
+          if (!seen.has(cand)) { seen.add(cand); yield cand; }
+        }
+      }
+    }
+  }
+  // 惰性生成「纯数字密码」：按位数 n=1..maxLen 枚举 0..10^n-1（含前导 0）
+  function* numericAll(maxLen) {
+    for (let n = 1; n <= maxLen; n++) {
+      const total = Math.pow(10, n);
+      for (let v = 0; v < total; v++) yield String(v).padStart(n, '0');
+    }
+  }
+  /**
+   * 爆破打开密码。opts:
+   *   feature  特征串（数字，密码里必须包含）；留空则穷举全部数字
+   *   maxLen   最大数字位数（上限 8）；maxMs  超时毫秒（默认 180000=3 分钟）
+   *   extra    自定义候选数组；weak 是否先跑弱密码字典
+   * 返回 {password,fileKey,tried,elapsed,timeout}，未命中 password 为 null
+   */
+  async function crackFileKey(dict, id0, opts) {
+    opts = opts || {};
+    const feature = (opts.feature || '').trim();
+    const maxLen = Math.max(1, Math.min(8, opts.maxLen | 0 || 6));
+    const maxMs = opts.maxMs || 180000;
+    const yieldEvery = opts.yieldEvery || 500;
+    const start = Date.now();
+    let tried = 0;
+    const testPw = pw => {
+      tried++;
+      const key = fileKeyForPassword(dict, id0, pw);
+      return verifyUserKey(dict, id0, key) ? key : null;
+    };
+    const head = [];
+    (opts.extra || []).forEach(p => { if (p && !head.includes(p)) head.push(p); });
+    if (opts.weak !== false) WEAK_PASSWORDS.forEach(p => { if (!head.includes(p)) head.push(p); });
+    // 头部候选（自定义 + 弱密码）
+    for (const pw of head) {
+      const key = testPw(pw);
+      if (key) return { password: pw, fileKey: key, tried, elapsed: Date.now() - start, timeout: false };
+    }
+    // 数字枚举：特征串非空 → 含该串；留空 → 穷举 1～maxLen 位全部数字
+    const gen = /^\d+$/.test(feature) ? numericContaining(feature, maxLen) : numericAll(maxLen);
+    for (const cand of gen) {
+      if (head.includes(cand)) continue;
+      const key = testPw(cand);
+      if (key) return { password: cand, fileKey: key, tried, elapsed: Date.now() - start, timeout: false };
+      // 周期性让出主线程并检查 3 分钟上限
+      if (tried % yieldEvery === 0) {
+        if (Date.now() - start >= maxMs) {
+          return { password: null, fileKey: null, tried, elapsed: Date.now() - start, timeout: true };
+        }
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+    return { password: null, fileKey: null, tried, elapsed: Date.now() - start, timeout: false };
+  }
+
   // ======================= 加密字典解析（公共） =======================
   /**
    * 从 trailer 源文本解析 /Encrypt、/ID，读取加密字典对象，计算文件密钥，验证 user 密码为空。
    * 返回 { encObjNum, encDict, fileKey }；未加密返回 null。
    */
-  async function parseEncryption(trailerSource, entries, data) {
+  async function parseEncryption(trailerSource, entries, data, crackOptions) {
     const encM = /\/Encrypt\s+(\d+)\s+(\d+)\s+R/.exec(trailerSource);
     if (!encM) return null;
     const encObjNum = parseInt(encM[1], 10);
@@ -561,38 +805,43 @@
       if (!UEm) throw new Error('加密字典缺少 /UE');
       const UE = UEm[1] !== undefined ? parseHexBytes(UEm[1]) : parseParenString(ed, UEm.index + UEm[0].length - 1).bytes;
       const fileKey = await verifyV5U(encDict.U, UE, encDict.R);
-      if (!fileKey) throw new Error('该 PDF 需要打开密码（user password），无法在本地移除。请先用其密码打开，再使用本工具');
-      return { encObjNum, encDict, fileKey };
+      if (!fileKey) throw new Error('该 PDF 为 AES-256 且设置了打开密码；浏览器内置爆破仅支持 RC4/AES-128（R2-R4），请改用已知密码或 Hashcat(10500/10700)。');
+      return { encObjNum, encDict, fileKey, password: '', hash: '' };
     }
 
-    const fileKey = computeFileKeyClean(encDict, id0);
-    if (!fileKey) throw new Error('不支持的加密参数 (R=' + encDict.R + ', V=' + encDict.V + ')');
+    const emptyKey = computeFileKeyClean(encDict, id0);
+    if (!emptyKey) throw new Error('不支持的加密参数 (R=' + encDict.R + ', V=' + encDict.V + ')');
 
-    // 验证空密码（user password 为空）：算法6 计算 U'，比较前16字节
-    if (encDict.U && encDict.U.length >= 16) {
-      let uCheck;
-      if (encDict.R >= 3) {
-        // MD5(padding32 + ID[0])，RC4(fileKey)，再 19 次迭代（密钥逐次异或 1..19）
-        let h = md5(concatBytes(PADDING, id0));
-        h = rc4(fileKey, h);
-        for (let i = 1; i <= 19; i++) {
-          const ki = new Uint8Array(fileKey.length);
-          for (let k = 0; k < fileKey.length; k++) ki[k] = fileKey[k] ^ i;
-          h = rc4(ki, h);
-        }
-        uCheck = h.subarray(0, 16);
-      } else {
-        uCheck = rc4(fileKey, PADDING).subarray(0, 16);
-      }
-      let same = true;
-      for (let k = 0; k < 16; k++) {
-        if (uCheck[k] !== encDict.U[k]) { same = false; break; }
-      }
-      if (!same) {
-        throw new Error('该 PDF 需要打开密码（user password），无法在本地移除。请先用其密码打开，再使用本工具');
-      }
+    // 先验证空密码（仅 owner 权限限制、无打开密码的 PDF）
+    if (!encDict.U || encDict.U.length < 16 || verifyUserKey(encDict, id0, emptyKey)) {
+      return { encObjNum, encDict, fileKey: emptyKey, password: '', hash: buildJohnHash(encDict, id0) };
     }
-    return { encObjNum, encDict, fileKey };
+
+    // 空密码不通过 → 若开启爆破则恢复打开密码（R2-R4：RC4-40/128 / AES-128）
+    if (crackOptions && crackOptions.enabled) {
+      const res = await crackFileKey(encDict, id0, crackOptions, crackOptions.onProgress);
+      if (res.fileKey) {
+        return {
+          encObjNum, encDict,
+          fileKey: res.fileKey,
+          password: res.password,
+          tried: res.tried,
+          hash: buildJohnHash(encDict, id0)
+        };
+      }
+      throw Object.assign(
+        new Error(res.timeout
+          ? '达到 3 分钟上限，密码枚举被终止'
+          : '该 PDF 需要打开密码，枚举完未命中'),
+        { report: {
+            timeout: res.timeout,
+            tried: res.tried,
+            elapsed: res.elapsed || 0,
+            method: encDict.cryptMethod,
+            hash: buildJohnHash(encDict, id0)
+        } });
+    }
+    throw new Error('该 PDF 需要打开密码（user password）。请在下方开启「打开密码爆破」，或改用已知密码。');
   }
 
   // ======================= 传统 xref table 解析 =======================
@@ -1227,7 +1476,7 @@
    * @param {Uint8Array} pdfBytes 原始 PDF 字节
    * @returns {Promise<{bytes: Uint8Array, info: object}>}
    */
-  async function unlock(pdfBytes) {
+  async function unlock(pdfBytes, crackOptions) {
     const data = new Uint8Array(pdfBytes);
     const s = toStr(data);
     if (!s.startsWith('%PDF')) throw new Error('不是有效的 PDF 文件');
@@ -1239,7 +1488,7 @@
 
     // 2. 传统 xref table 分支
     if (s.startsWith('xref', startxref)) {
-      return await unlockClassic(data, s, startxref);
+      return await unlockClassic(data, s, startxref, crackOptions);
     }
 
     // 3. xref stream 对象
@@ -1286,12 +1535,12 @@
 
     // 7. 加密字典与 ID（trailer 信息可分布在 xref stream 对象字典或流数据尾部文本）
     const trailerSource = xrefDict + '\n' + trailerText;
-    const enc = await parseEncryption(trailerSource, entries, data);
+    const enc = await parseEncryption(trailerSource, entries, data, crackOptions);
     if (!enc) {
       // 未加密 → 原样返回
       return { bytes: data, info: { alreadyUnencrypted: true } };
     }
-    const { encObjNum, encDict, fileKey } = enc;
+    const { encObjNum, encDict, fileKey, password, hash, tried } = enc;
 
     // 8. 解密所有 type1 流对象（跳过 xref stream 与加密字典）
     const dec = await decryptStreams(data.slice(), entries, encObjNum, encDict, fileKey, xrefObj.objNum, null);
@@ -1338,17 +1587,20 @@
         decryptedStreams: decryptedCount,
         startxref: newStartxref,
         cryptMethod: encDict.cryptMethod,
+        password: password || '',
+        hash: hash || '',
+        tried: tried || 0,
         fileKey: Array.from(fileKey).map(b => b.toString(16).padStart(2, '0')).join('')
       }
     };
   }
 
   /** 传统 xref table 版本：解析 xref 表，解密流，改写 trailer（去 /Encrypt） */
-  async function unlockClassic(data, s, startxref) {
+  async function unlockClassic(data, s, startxref, crackOptions) {
     const xr = parseClassicXref(s, startxref);
-    const enc = await parseEncryption(xr.trailerText, xr.entries, data);
+    const enc = await parseEncryption(xr.trailerText, xr.entries, data, crackOptions);
     if (!enc) return { bytes: data, info: { alreadyUnencrypted: true } };
-    const { encObjNum, encDict, fileKey } = enc;
+    const { encObjNum, encDict, fileKey, password, hash, tried } = enc;
 
     const refs = { trailerDictStart: xr.trailerDictStart, trailerDictEnd: xr.trailerDictEnd };
     const dec = await decryptStreams(data.slice(), xr.entries, encObjNum, encDict, fileKey, -1, refs);
@@ -1376,12 +1628,15 @@
         classicXref: true,
         startxref: newStartxref,
         cryptMethod: encDict.cryptMethod,
+        password: password || '',
+        hash: hash || '',
+        tried: tried || 0,
         fileKey: Array.from(fileKey).map(b => b.toString(16).padStart(2, '0')).join('')
       }
     };
   }
 
-  const api = { unlock, inflateZlib, md5, rc4, aesCbcDecrypt, aesCbcEncryptNoPad, aesCbcDecryptNoPad, aesEncryptBlock, aesDecryptBlock, alg2b, verifyV5U, computeFileKeyClean, objectKey, parseObjectAt, applyPredictor, parseHexBytes, parseParenString, toStr, parseEncryption, parseClassicXref, escapeParenBytes, decryptPdfStrings };
+  const api = { unlock, inflateZlib, md5, rc4, aesCbcDecrypt, aesCbcEncryptNoPad, aesCbcDecryptNoPad, aesEncryptBlock, aesDecryptBlock, alg2b, verifyV5U, computeFileKeyClean, objectKey, parseObjectAt, applyPredictor, parseHexBytes, parseParenString, toStr, parseEncryption, parseClassicXref, escapeParenBytes, decryptPdfStrings, fileKeyForPassword, verifyUserKey, crackFileKey, buildJohnHash, numericContaining };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   global.PDFUnlock = api;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -1464,6 +1719,22 @@
   file.addEventListener('change', () => { if (file.files.length) addFiles(file.files); file.value = ''; });
   pick.addEventListener('click', () => file.click());
 
+  // 爆破面板展开/收起
+  const crackbox = $('crackbox'), crackEnabled = $('crackEnabled');
+  crackEnabled.addEventListener('change', () => crackbox.classList.toggle('on', crackEnabled.checked));
+  function readCrackOptions(fileName, index, total) {
+    if (!crackEnabled.checked) return { enabled: false };
+    const extra = $('crackExtra').value.split(/[,，\s]+/).map(s => s.trim()).filter(Boolean);
+    return {
+      enabled: true,
+      feature: $('crackFeature').value.trim(),
+      maxLen: parseInt($('crackMaxLen').value, 10) || 6,
+      weak: $('crackWeak').checked,
+      extra,
+      maxMs: 180000
+    };
+  }
+
   go.addEventListener('click', async () => {
     if (!files.length) { setStatus('请先选择要处理的 PDF 文件。', 'err'); return; }
     go.disabled = true; pick.disabled = true;
@@ -1480,7 +1751,8 @@
       try {
         const buf = new Uint8Array(await f.arrayBuffer());
         const t0 = performance.now();
-        const { bytes, info } = await PDFUnlock.unlock(buf);
+        const crackOptions = readCrackOptions(f.name, i, total);
+        const { bytes, info } = await PDFUnlock.unlock(buf, crackOptions);
         const ms = Math.round(performance.now() - t0);
         if (info.alreadyUnencrypted) {
           item.innerHTML = '<span class="ri-name"></span><span class="ri-info err">未加密，无需处理</span>';
@@ -1502,10 +1774,37 @@
         nameEl.textContent = f.name;
         const infoEl = document.createElement('span');
         infoEl.className = 'ri-info';
-        infoEl.textContent = '解密成功 · ' + method + ' · ' + ms + ' ms · ' + fmtSize(bytes.byteLength);
+        const crackNote = info.password
+          ? ' · 打开密码「' + info.password + '」（试 ' + info.tried.toLocaleString() + ' 次）'
+          : ' · 无打开密码';
+        infoEl.textContent = '解密成功 · ' + method + crackNote + ' · ' + ms + ' ms · ' + fmtSize(bytes.byteLength);
         item.appendChild(nameEl);
         item.appendChild(infoEl);
         item.appendChild(link);
+        // 可复制的 $pdf$ 哈希（用于 John / Hashcat 离线爆破）
+        if (info.hash) {
+          const hbox = document.createElement('div');
+          hbox.className = 'ri-hash';
+          const hspan = document.createElement('span');
+          hspan.textContent = info.hash;
+          const hbtn = document.createElement('button');
+          hbtn.type = 'button';
+          hbtn.textContent = '复制加密哈希';
+          hbtn.onclick = async () => {
+            const txt = info.hash;
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(txt);
+              } else {
+                window.prompt('复制以下哈希：', txt);
+              }
+              hbtn.textContent = '已复制';
+            } catch (er) { window.prompt('复制以下哈希：', txt); }
+          };
+          hbox.appendChild(hspan);
+          hbox.appendChild(hbtn);
+          item.appendChild(hbox);
+        }
         resultlist.appendChild(item);
         okCount++;
       } catch (e) {
@@ -1514,9 +1813,39 @@
         nameEl.textContent = f.name;
         const infoEl = document.createElement('span');
         infoEl.className = 'ri-info err';
-        infoEl.textContent = '失败：' + (e && e.message ? e.message : String(e));
-        item.appendChild(nameEl);
-        item.appendChild(infoEl);
+        if (e && e.report) {
+          // 3 分钟超时 / 枚举未命中 → 出报告，并给出可复制哈希便于 GPU 离线跑
+          const r = e.report;
+          const sec = Math.round(r.elapsed / 1000);
+          const method = r.method === 'AES' ? 'AES-128' : r.method === 'AES256' ? 'AES-256' : 'RC4';
+          infoEl.textContent = (r.timeout ? '已达 3 分钟上限，终止枚举' : '枚举完成未命中') +
+            ' · ' + method + ' · 试 ' + r.tried.toLocaleString() + ' 个 · ' + sec + ' 秒';
+          item.appendChild(nameEl);
+          item.appendChild(infoEl);
+          if (r.hash) {
+            const hbox = document.createElement('div');
+            hbox.style.cssText = 'flex-basis:100%;display:flex;gap:8px;align-items:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#64748b;background:#eef2f7;border-radius:6px;padding:6px 8px;word-break:break-all;line-height:1.4;';
+            const hspan = document.createElement('span');
+            hspan.textContent = r.hash;
+            const hbtn = document.createElement('button');
+            hbtn.type = 'button';
+            hbtn.textContent = '复制加密哈希';
+            hbtn.style.cssText = 'flex:none;min-height:auto;padding:4px 10px;font-size:11px;border:none;border-radius:6px;background:#cbd5e1;color:#1e293b;cursor:pointer;';
+            hbtn.onclick = async () => {
+              try {
+                if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(r.hash);
+                else window.prompt('复制以下哈希：', r.hash);
+                hbtn.textContent = '已复制';
+              } catch (er) { window.prompt('复制以下哈希：', r.hash); }
+            };
+            hbox.appendChild(hspan); hbox.appendChild(hbtn);
+            item.appendChild(hbox);
+          }
+        } else {
+          infoEl.textContent = '失败：' + (e && e.message ? e.message : String(e));
+          item.appendChild(nameEl);
+          item.appendChild(infoEl);
+        }
         resultlist.appendChild(item);
       }
     }
@@ -1528,3 +1857,4 @@
 </script>
 </body>
 </html>
+<!-- （注：内容由AI生成） -->

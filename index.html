@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>工程计算 By Kelvin</title>         
+    <title>探索乐学（DISCOVER AND STUDY）</title>         
     <style type="text/css">
         * { 
             margin: 0; 
@@ -309,13 +309,69 @@
         .eq-btn:hover {
             background: linear-gradient(135deg, #33e0ff, #33aadd);
         }
+
+        .guide-links {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: -20px 0 34px;
+        }
+
+        .guide-links .guide-label {
+            color: rgba(255,255,255,0.85);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .guide-links a {
+            display: inline-block;
+            padding: 7px 18px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .guide-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .site-footer {
+            text-align: center;
+            padding: 10px 20px 90px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .site-footer .visits {
+            font-size: 15px;
+            font-weight: 600;
+            color: #0ff;
+            margin-bottom: 8px;
+            letter-spacing: .3px;
+        }
+
+        .site-footer .visits span {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .site-footer .copyright {
+            font-size: 13px;
+            color: rgba(255,255,255,0.72);
+            letter-spacing: .4px;
+        }
     </style>          
 </head> 
 <body>
     <nav>
         <div class="menu">
             <div class="logo">
-                <a href="https://mailecusteducn-my.sharepoint.com/:x:/g/personal/kelvinlewis_mail_ecust_edu_cn/EQo-DJ8q91JKtH2Jh4Foo9gBoK8_tSG619xlx8ocoPmkUA" target="_pg_blank">工程计算 By Kelvin</a>
+                <a href="https://mailecusteducn-my.sharepoint.com/:x:/g/personal/kelvinlewis_mail_ecust_edu_cn/EQo-DJ8q91JKtH2Jh4Foo9gBoK8_tSG619xlx8ocoPmkUA" target="_pg_blank">探索乐学（DISCOVER AND STUDY）</a>
             </div>  
             <ul>
                 <li><a href="mech.html">机械</a></li>
@@ -326,18 +382,29 @@
     </nav>
 
     <div class="hero-section">
-        <div class="title">工程计算平台</div>
-        <div class="sub_title">Engineering Calculation Platform</div>
+        <div class="title">探索乐学</div>
+        <div class="sub_title">DISCOVER AND STUDY</div>
         
         <div class="links-container">
             <a href="pdf-unlock.html">PDF密码移除工具</a>
             <a href="1_new2.pdf">PDF效果</a>
         </div>
 
+        <div class="guide-links">
+            <span class="guide-label">密码移除工具说明</span>
+            <a href="pdf-unlock-guide-cn.html">中文说明</a>
+            <a href="pdf-unlock-guide-en.html">English Guide</a>
+        </div>
+
         <div class="pdf-container">
             <div id="my-pdf"></div>
         </div>
     </div>
+
+    <footer class="site-footer">
+        <div class="visits">近 30 天访问量 <span id="visitCount">—</span></div>
+        <div class="copyright">Copyright &copy; 2026 Kelvin. All Rights Reserved.</div>
+    </footer>
 
     <div class="footer-calc">
         <button id="calcBtn">🧮</button>
@@ -411,6 +478,17 @@
                 document.body.style.overflow = '';
             }
         };
+
+        (function() {
+            var el = document.getElementById('visitCount');
+            if (!el) return;
+            fetch('/api/visits', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    el.textContent = (data && typeof data.count === 'number') ? data.count : '—';
+                })
+                .catch(function() { el.textContent = '—'; });
+        })();
     </script>
 </body>
 </html>
