@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="CN" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工具 · 探索乐学</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        ::selection {
+            background: #a65b5b;
+            color: #fff;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            background: rgba(27, 27, 27, 0.95);
+            width: 100%;
+            padding: 15px 0;
+            z-index: 12;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        nav .menu {
+            max-width: 900px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+        }
+
+        .menu .logo a {
+            text-decoration: none;
+            color: #f0f;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .menu ul {
+            display: inline-flex;
+            list-style: none;
+        }
+
+        .menu ul li {
+            margin-left: 10px;
+        }
+
+        .menu ul li a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 8px 20px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .menu ul li a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .hero-section {
+            padding: 120px 20px 40px;
+            text-align: center;
+        }
+
+        .hero-section .title {
+            color: #fff;
+            font-size: 44px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-section .sub_title {
+            color: #0ff;
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 36px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        .tool-card {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
+            color: #fff;
+            margin-bottom: 32px;
+        }
+
+        .tool-icon {
+            flex: 0 0 auto;
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 18px rgba(238, 90, 36, 0.4);
+        }
+
+        .tool-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tool-body h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .tool-body p {
+            font-size: 14px;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.82);
+            margin-bottom: 16px;
+        }
+
+        .tool-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tool-actions a {
+            text-decoration: none;
+            padding: 9px 20px;
+            border-radius: 22px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .tool-actions .primary {
+            background: #fff;
+            color: #5b3fa8;
+        }
+
+        .tool-actions .primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+
+        .tool-actions .ghost {
+            background: rgba(255,255,255,0.18);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .tool-actions .ghost:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .section-head {
+            color: #fff;
+            margin-bottom: 14px;
+        }
+
+        .section-head h2 {
+            font-size: 22px;
+            letter-spacing: 1px;
+        }
+
+        .pdf-container {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 16px;
+            backdrop-filter: blur(5px);
+        }
+
+        .pdfobject-container {
+            height: 600px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .site-footer {
+            text-align: center;
+            padding: 10px 20px 40px;
+            color: rgba(255,255,255,0.75);
+            font-size: 13px;
+        }
+
+        @media (max-width: 640px) {
+            .menu .logo a {
+                font-size: 20px;
+            }
+
+            .menu ul li a {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .tool-card {
+                flex-direction: column;
+            }
+
+            .hero-section .title {
+                font-size: 34px;
+            }
+
+            .hero-section .sub_title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="menu">
+            <div class="logo">
+                <a href="index.html">探索乐学（DISCOVER AND STUDY）</a>
+            </div>
+            <ul>
+                <li><a href="index.html#comic">连环画</a></li>
+                <li><a href="index.html#oldbook">古籍</a></li>
+                <li><a href="tools.html">工具</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="title">实用工具</div>
+        <div class="sub_title">TOOLS</div>
+    </div>
+
+    <div class="container">
+        <div class="tool-card">
+            <div class="tool-icon">PDF</div>
+            <div class="tool-body">
+                <h2>PDF 密码移除工具</h2>
+                <p>移除 PDF 的「编辑 / 打印 / 复制」等权限限制（Owner 密码），也可对 RC4 / AES-128 的简单打开密码进行本地爆破。全部在本地浏览器中处理，文件不会上传到任何服务器。支持 RC4 / AES-128 / AES-256，可处理数十至数百 MB 的大文件。</p>
+                <div class="tool-actions">
+                    <a class="primary" href="pdf-unlock.html">打开工具</a>
+                    <a class="ghost" href="pdf-unlock-guide-cn.html">中文说明</a>
+                    <a class="ghost" href="pdf-unlock-guide-en.html">English Guide</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-head">
+            <h2>PDF 演示</h2>
+        </div>
+        <div class="pdf-container">
+            <div id="my-pdf"></div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        Copyright &copy; 2026 Kelvin. All Rights Reserved.
+    </footer>
+
+    <script src="https://unpkg.com/pdfobject"></script>
+    <script>
+        PDFObject.embed("1_new2.pdf", "#my-pdf");
+    </script>
+</body>
+</html>

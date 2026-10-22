@@ -75,7 +75,7 @@
         }
 
         .hero-section {
-            padding: 120px 20px 60px;
+            padding: 120px 20px 40px;
             text-align: center;
         }
 
@@ -91,51 +91,186 @@
             color: #0ff;
             font-size: 32px;
             font-weight: 600;
-            margin-bottom: 30px;
+            margin-bottom: 36px;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
         }
 
-        .links-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 40px;
-        }
-
-        .links-container a {
-            display: inline-block;
-            padding: 12px 30px;
-            background: rgba(255,255,255,0.2);
-            color: #fff;
-            text-decoration: none;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .links-container a:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .pdf-container {
+        .entry-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
             max-width: 900px;
             margin: 0 auto;
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            padding: 20px;
-            backdrop-filter: blur(5px);
-            margin-bottom: 40px;
         }
 
-        .pdfobject-container {
-            height: 600px;
-            border-radius: 10px;
+        .entry-card {
+            display: block;
+            padding: 24px 18px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 16px;
+            color: #fff;
+            text-decoration: none;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+
+        .entry-card:hover {
+            background: rgba(255,255,255,0.24);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+        }
+
+        .entry-card .icon {
+            display: block;
+            font-size: 32px;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .entry-card h3 {
+            font-size: 20px;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .entry-card p {
+            font-size: 13px;
+            color: rgba(255,255,255,0.78);
+            line-height: 1.5;
+        }
+
+        .list-section {
+            max-width: 900px;
+            margin: 44px auto 0;
+            padding: 0 20px;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+            color: #fff;
+        }
+
+        .section-head h2 {
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .section-head .count {
+            font-size: 13px;
+            color: rgba(255,255,255,0.75);
+        }
+
+        .list-card {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
             overflow: hidden;
+        }
+
+        .file-list {
+            max-height: 520px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.35) transparent;
+        }
+
+        .file-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .file-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            color: #fff;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+            transition: background 0.2s ease;
+        }
+
+        .file-row:last-child {
+            border-bottom: none;
+        }
+
+        .file-row:hover {
+            background: rgba(255,255,255,0.12);
+        }
+
+        .badge {
+            flex: 0 0 auto;
+            min-width: 44px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.22);
+        }
+
+        .file-name {
+            flex: 1;
+            min-width: 0;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            flex: 0 0 auto;
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .state {
+            padding: 22px;
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .more-wrap {
+            display: none;
+            text-align: center;
+            padding: 14px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .more-btn {
+            padding: 9px 26px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .more-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.32);
+        }
+
+        .more-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
         }
 
         .footer-calc {
@@ -310,41 +445,9 @@
             background: linear-gradient(135deg, #33e0ff, #33aadd);
         }
 
-        .guide-links {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: -20px 0 34px;
-        }
-
-        .guide-links .guide-label {
-            color: rgba(255,255,255,0.85);
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .guide-links a {
-            display: inline-block;
-            padding: 7px 18px;
-            background: rgba(255,255,255,0.15);
-            color: #fff;
-            text-decoration: none;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .guide-links a:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-
         .site-footer {
             text-align: center;
-            padding: 10px 20px 90px;
+            padding: 44px 20px 90px;
             color: rgba(255,255,255,0.8);
         }
 
@@ -365,18 +468,41 @@
             color: rgba(255,255,255,0.72);
             letter-spacing: .4px;
         }
+
+        @media (max-width: 640px) {
+            .menu .logo a {
+                font-size: 20px;
+            }
+
+            .menu ul li a {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .entry-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-section .title {
+                font-size: 36px;
+            }
+
+            .hero-section .sub_title {
+                font-size: 24px;
+            }
+        }
     </style>          
 </head> 
 <body>
     <nav>
         <div class="menu">
             <div class="logo">
-                <a href="https://mailecusteducn-my.sharepoint.com/:x:/g/personal/kelvinlewis_mail_ecust_edu_cn/EQo-DJ8q91JKtH2Jh4Foo9gBoK8_tSG619xlx8ocoPmkUA" target="_pg_blank">探索乐学（DISCOVER AND STUDY）</a>
+                <a href="index.html">探索乐学（DISCOVER AND STUDY）</a>
             </div>  
             <ul>
-                <li><a href="mech.html">机械</a></li>
-                <li><a href="chem.html">化工</a></li>
-                <li><a href="help.html">反馈</a></li>
+                <li><a href="#comic">连环画</a></li>
+                <li><a href="#oldbook">古籍</a></li>
+                <li><a href="tools.html">工具</a></li>
             </ul>
         </div>
     </nav>
@@ -384,22 +510,47 @@
     <div class="hero-section">
         <div class="title">探索乐学</div>
         <div class="sub_title">DISCOVER AND STUDY</div>
-        
-        <div class="links-container">
-            <a href="pdf-unlock.html">PDF密码移除工具</a>
-            <a href="1_new2.pdf">PDF效果</a>
-        </div>
 
-        <div class="guide-links">
-            <span class="guide-label">密码移除工具说明</span>
-            <a href="pdf-unlock-guide-cn.html">中文说明</a>
-            <a href="pdf-unlock-guide-en.html">English Guide</a>
-        </div>
-
-        <div class="pdf-container">
-            <div id="my-pdf"></div>
+        <div class="entry-grid">
+            <a class="entry-card" href="#comic">
+                <span class="icon">🎬</span>
+                <h3>连环画</h3>
+                <p>经典连环画作品</p>
+            </a>
+            <a class="entry-card" href="#oldbook">
+                <span class="icon">📜</span>
+                <h3>古籍</h3>
+                <p>古籍文献典藏</p>
+            </a>
+            <a class="entry-card" href="tools.html">
+                <span class="icon">🧰</span>
+                <h3>工具</h3>
+                <p>实用工具与说明</p>
+            </a>
         </div>
     </div>
+
+    <section class="list-section" id="comic" data-prefix="comic">
+        <div class="section-head">
+            <h2>连环画</h2>
+            <span class="count"></span>
+        </div>
+        <div class="list-card">
+            <div class="file-list"><div class="state">加载中…</div></div>
+            <div class="more-wrap"><button class="more-btn" type="button">加载更多</button></div>
+        </div>
+    </section>
+
+    <section class="list-section" id="oldbook" data-prefix="oldbook">
+        <div class="section-head">
+            <h2>古籍</h2>
+            <span class="count"></span>
+        </div>
+        <div class="list-card">
+            <div class="file-list"><div class="state">加载中…</div></div>
+            <div class="more-wrap"><button class="more-btn" type="button">加载更多</button></div>
+        </div>
+    </section>
 
     <footer class="site-footer">
         <div class="visits">近 30 天访问量 <span id="visitCount">—</span></div>
@@ -439,10 +590,7 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/pdfobject"></script>
     <script>
-        PDFObject.embed("1_new2.pdf", "#my-pdf");
-        
         function calcInput(val) {
             document.getElementById('calcDisplay').value += val;
         }
@@ -488,6 +636,125 @@
                     el.textContent = (data && typeof data.count === 'number') ? data.count : '—';
                 })
                 .catch(function() { el.textContent = '—'; });
+        })();
+
+        // ===== R2 文件清单 =====
+        (function() {
+            var PAGE_SIZE = 200;
+            var states = {};
+
+            function fmtSize(n) {
+                if (!n && n !== 0) return '';
+                if (n < 1024) return n + ' B';
+                if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+                if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+                return (n / 1073741824).toFixed(2) + ' GB';
+            }
+
+            function extOf(name) {
+                var i = name.lastIndexOf('.');
+                if (i < 0 || i === name.length - 1) return 'FILE';
+                return name.slice(i + 1).toUpperCase().slice(0, 4);
+            }
+
+            function makeRow(obj) {
+                var a = document.createElement('a');
+                a.className = 'file-row';
+                a.href = '/api/file?key=' + encodeURIComponent(obj.key);
+                a.target = '_blank';
+                a.rel = 'noopener';
+
+                var badge = document.createElement('span');
+                badge.className = 'badge';
+                badge.textContent = extOf(obj.name);
+
+                var name = document.createElement('span');
+                name.className = 'file-name';
+                name.textContent = obj.name;
+                name.title = obj.name;
+
+                var size = document.createElement('span');
+                size.className = 'file-size';
+                size.textContent = fmtSize(obj.size);
+
+                a.appendChild(badge);
+                a.appendChild(name);
+                a.appendChild(size);
+                return a;
+            }
+
+            function load(section, reset) {
+                var prefix = section.dataset.prefix;
+                var listEl = section.querySelector('.file-list');
+                var countEl = section.querySelector('.count');
+                var moreWrap = section.querySelector('.more-wrap');
+                var moreBtn = section.querySelector('.more-btn');
+                var st = states[prefix] || (states[prefix] = { cursor: null, loaded: 0, done: false, loading: false });
+
+                if (reset) {
+                    st.cursor = null;
+                    st.loaded = 0;
+                    st.done = false;
+                    listEl.innerHTML = '<div class="state">加载中…</div>';
+                    countEl.textContent = '';
+                    moreWrap.style.display = 'none';
+                }
+                if (st.loading || st.done) return;
+
+                st.loading = true;
+                moreBtn.disabled = true;
+                moreBtn.textContent = '加载中…';
+
+                var params = new URLSearchParams();
+                params.set('prefix', prefix);
+                params.set('limit', String(PAGE_SIZE));
+                if (st.cursor) params.set('cursor', st.cursor);
+
+                fetch('/api/list?' + params.toString())
+                    .then(function(res) {
+                        return res.json().catch(function() { return {}; }).then(function(data) {
+                            if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+                            return data;
+                        });
+                    })
+                    .then(function(data) {
+                        if (reset) listEl.innerHTML = '';
+                        var objects = data.objects || [];
+                        if (objects.length === 0 && st.loaded === 0) {
+                            listEl.innerHTML = '<div class="state">暂无文件</div>';
+                        } else {
+                            var frag = document.createDocumentFragment();
+                            objects.forEach(function(obj) { frag.appendChild(makeRow(obj)); });
+                            listEl.appendChild(frag);
+                            st.loaded += objects.length;
+                        }
+                        st.cursor = data.cursor || null;
+                        st.done = !data.truncated || !st.cursor;
+                        countEl.textContent = st.loaded ? ('已显示 ' + st.loaded + ' 项' + (st.done ? '' : '，可继续加载')) : '';
+                        moreWrap.style.display = st.done || st.loaded === 0 ? 'none' : 'block';
+                    })
+                    .catch(function(err) {
+                        if (reset) listEl.innerHTML = '';
+                        var msg = document.createElement('div');
+                        msg.className = 'state';
+                        msg.textContent = '清单加载失败：' + err.message + '（请确认 Pages 项目已配置 R2 绑定）';
+                        listEl.appendChild(msg);
+                        moreWrap.style.display = 'none';
+                    })
+                    .then(function() {
+                        st.loading = false;
+                        moreBtn.disabled = false;
+                        moreBtn.textContent = '加载更多';
+                    });
+            }
+
+            var sections = document.querySelectorAll('.list-section');
+            Array.prototype.forEach.call(sections, function(section) {
+                section.querySelector('.more-btn').addEventListener('click', function() {
+                    load(section, false);
+                });
+                load(section, true);
+            });
         })();
     </script>
 </body>
