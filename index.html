@@ -660,7 +660,7 @@
             function makeRow(obj) {
                 var a = document.createElement('a');
                 a.className = 'file-row';
-                a.href = '/api/file?key=' + encodeURIComponent(obj.key);
+                a.href = obj.url || ('/api/file?key=' + encodeURIComponent(obj.key));
                 a.target = '_blank';
                 a.rel = 'noopener';
 

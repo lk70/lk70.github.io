@@ -58,24 +58,20 @@ function text(body, status) {
   });
 }
 
-/** 解析单段 Range 请求；返回 { start, end } 或 null（非法/多段） */
-function parseRange(header, size) {
+/** 解析单段 Range；返回 { start, end } / { suffix } / null（非法或多段） */
+function parseRangeHeader(header) {
   const m = /^bytes=(\d*)-(\d*)$/.exec(header.trim());
   if (!m) return null;
-  let start;
-  let end;
+  if (m[1] === '' && m[2] === '') return null;
   if (m[1] === '') {
-    if (m[2] === '') return null;
     const suffix = parseInt(m[2], 10);
-    if (!suffix) return null;
-    start = Math.max(size - suffix, 0);
-    end = size - 1;
-  } else {
-    start = parseInt(m[1], 10);
-    end = m[2] ? parseInt(m[2], 10) : size - 1;
+    return suffix > 0 ? { suffix } : null;
   }
-  if (!Number.isFinite(start) || !Number.isFinite(end) || start > end || start >= size) return null;
-  return { start, end: Math.min(end, size - 1) };
+  const start = parseInt(m[1], 10);
+  const end = m[2] === '' ? null : parseInt(m[2], 10);
+  if (!Number.isFinite(start) || start < 0) return null;
+  if (end !== null && (!Number.isFinite(end) || end < start)) return null;
+  return { start, end };
 }
 
 /** 基于 R2 对象的元数据构造响应头 */
@@ -103,37 +99,51 @@ async function handle(request, env, headOnly) {
   const rangeHeader = request.headers.get('Range');
 
   try {
-    if (rangeHeader || headOnly) {
+    if (headOnly) {
       const meta = await bucket.head(key);
       if (!meta) return text('文件不存在', 404);
-
-      let range = null;
-      if (rangeHeader) {
-        range = parseRange(rangeHeader, meta.size);
-        if (!range) {
-          return new Response('Range 无法满足', {
-            status: 416,
-            headers: { 'Content-Range': 'bytes */' + meta.size },
-          });
-        }
-      }
-
       const headers = buildHeaders(meta, key);
-      if (range) {
-        headers.set('Content-Length', String(range.end - range.start + 1));
-        headers.set('Content-Range', 'bytes ' + range.start + '-' + range.end + '/' + meta.size);
+      headers.set('Content-Length', String(meta.size));
+      return new Response(null, { status: 200, headers });
+    }
+
+    if (rangeHeader) {
+      const spec = parseRangeHeader(rangeHeader);
+      if (!spec) return new Response('Range 无法满足', { status: 416 });
+
+      let offset;
+      let length;
+      let total;
+
+      if (spec.suffix !== undefined) {
+        // 仅后缀范围（bytes=-N）需要先取对象大小
+        const meta = await bucket.head(key);
+        if (!meta) return text('文件不存在', 404);
+        if (meta.size === 0) return new Response('Range 无法满足', { status: 416 });
+        offset = Math.max(meta.size - spec.suffix, 0);
+        length = meta.size - offset;
+        total = meta.size;
       } else {
-        headers.set('Content-Length', String(meta.size));
+        offset = spec.start;
+        length = spec.end === null ? undefined : spec.end - spec.start + 1;
       }
 
-      if (headOnly) {
-        return new Response(null, { status: range ? 206 : 200, headers });
-      }
-
+      // 常见 Range（bytes=a-b / bytes=a-）直接读取，省去多余的 head 往返
       const obj = await bucket.get(key, {
-        range: { offset: range.start, length: range.end - range.start + 1 },
+        range: length === undefined ? { offset } : { offset, length },
       });
-      if (!obj) return text('文件不存在', 404);
+      if (!obj) return new Response('Range 无法满足', { status: 416 });
+
+      const size = total !== undefined ? total : obj.size;
+      const actualOffset = obj.range ? obj.range.offset : offset;
+      const actualLength = obj.range
+        ? obj.range.length
+        : Math.min(length === undefined ? size - actualOffset : length, size - actualOffset);
+      if (!(actualLength > 0)) return new Response('Range 无法满足', { status: 416 });
+
+      const headers = buildHeaders(obj, key);
+      headers.set('Content-Length', String(actualLength));
+      headers.set('Content-Range', 'bytes ' + actualOffset + '-' + (actualOffset + actualLength - 1) + '/' + size);
       return new Response(obj.body, { status: 206, headers });
     }
 

@@ -33,6 +33,15 @@ function resolveBucket(env) {
   return null;
 }
 
+/**
+ * 可选：R2 桶的公开访问域名（如 https://files.example.com）。
+ * 配置后清单返回直链，文件下载不再经过 Pages Function，速度明显更快。
+ */
+function publicBase(env) {
+  const base = env.R2_PUBLIC_BASE || env.PUBLIC_R2_BASE || '';
+  return base.replace(/\/+$/, '');
+}
+
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const prefix = (url.searchParams.get('prefix') || '').replace(/^\/+|\/+$/g, '');
@@ -54,12 +63,16 @@ export async function onRequestGet({ request, env }) {
 
   try {
     const listed = await bucket.list({ prefix: prefix + '/', cursor, limit });
+    const base = publicBase(env);
     const objects = listed.objects
       .map((o) => ({
         key: o.key,
         name: o.key.slice(prefix.length + 1),
         size: o.size,
         uploaded: o.uploaded ? new Date(o.uploaded).toISOString() : null,
+        url: base
+          ? base + '/' + o.key.split('/').map((s) => encodeURIComponent(s)).join('/')
+          : null,
       }))
       .filter((o) => o.name && !o.name.endsWith('/'));
 
