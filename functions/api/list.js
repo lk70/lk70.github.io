@@ -1,16 +1,16 @@
 /**
  * Cloudflare Pages Function: /api/list
  *
- * 列出 R2 桶 udisk 中 comic/ 与 oldbook/ 目录下的文件。
- * 依赖：Pages 项目的 R2 绑定。绑定变量名可为 R2 / BUCKET / UDISK / udisk 等，
- * 建议使用 R2；若你的绑定名不同，请在 RESOLVE_ORDER 中补充。
+ * 按目录层级列出 R2 桶 udisk 中 comic/ 与 oldbook/ 下的子文件夹和文件。
+ * 依赖：Pages 项目的 R2 绑定。绑定变量名可为 R2 / BUCKET / UDISK / udisk 等。
  *
  * 查询参数：
  *   prefix  comic | oldbook
+ *   path    相对 prefix 的子目录（不带首尾斜杠），如 三国演义/第1集
  *   cursor  R2 分页游标（首次不传）
- *   limit   每页条数，默认 200，最大 1000
+ *   limit   每页文件条数，默认 200，最大 1000
  *
- * 返回：{ prefix, objects: [{ key, name, size, uploaded }], truncated, cursor }
+ * 返回：{ prefix, path, folders: [{ name, path }], objects: [...], truncated, cursor }
  */
 
 const ALLOWED_PREFIXES = new Set(['comic', 'oldbook']);
@@ -42,12 +42,26 @@ function publicBase(env) {
   return base.replace(/\/+$/, '');
 }
 
+/** 规范化子目录路径；非法（含 . / .. / 空段）返回 null */
+function normalizePath(raw) {
+  const trimmed = (raw || '').replace(/^\/+|\/+$/g, '');
+  if (!trimmed) return '';
+  const parts = trimmed.split('/');
+  if (parts.some((p) => p === '' || p === '.' || p === '..')) return null;
+  return parts.join('/');
+}
+
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const prefix = (url.searchParams.get('prefix') || '').replace(/^\/+|\/+$/g, '');
 
   if (!ALLOWED_PREFIXES.has(prefix)) {
     return json({ error: '无效的目录，仅支持 comic 或 oldbook' }, 400);
+  }
+
+  const path = normalizePath(url.searchParams.get('path'));
+  if (path === null) {
+    return json({ error: '无效的目录路径' }, 400);
   }
 
   const bucket = resolveBucket(env);
@@ -61,23 +75,33 @@ export async function onRequestGet({ request, env }) {
     1000
   );
 
+  const basePrefix = prefix + '/' + (path ? path + '/' : '');
+
   try {
-    const listed = await bucket.list({ prefix: prefix + '/', cursor, limit });
+    const listed = await bucket.list({ prefix: basePrefix, delimiter: '/', cursor, limit });
     const base = publicBase(env);
+
+    const folders = (listed.delimitedPrefixes || []).map((dp) => {
+      const rel = dp.slice(prefix.length + 1).replace(/\/$/, '');
+      return { name: rel.split('/').pop(), path: rel };
+    });
+
     const objects = listed.objects
+      .filter((o) => o.key !== basePrefix && !o.key.endsWith('/'))
       .map((o) => ({
         key: o.key,
-        name: o.key.slice(prefix.length + 1),
+        name: o.key.slice(basePrefix.length),
         size: o.size,
         uploaded: o.uploaded ? new Date(o.uploaded).toISOString() : null,
         url: base
           ? base + '/' + o.key.split('/').map((s) => encodeURIComponent(s)).join('/')
           : null,
-      }))
-      .filter((o) => o.name && !o.name.endsWith('/'));
+      }));
 
     return json({
       prefix,
+      path,
+      folders,
       objects,
       truncated: !!listed.truncated,
       cursor: listed.truncated ? listed.cursor || null : null,
