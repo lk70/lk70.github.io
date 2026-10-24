@@ -110,38 +110,6 @@ nav .menu {
     padding: 0 20px 50px;
 }
 
-.breadcrumb {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: rgba(255,255,255,0.75);
-}
-
-.crumb {
-    color: rgba(255,255,255,0.85);
-    text-decoration: none;
-    padding: 4px 10px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.1);
-}
-
-a.crumb:hover {
-    background: rgba(255,255,255,0.24);
-}
-
-.crumb.current {
-    background: rgba(255,255,255,0.2);
-    color: #fff;
-    font-weight: 600;
-}
-
-.crumb-sep {
-    color: rgba(255,255,255,0.55);
-}
-
 .section-head {
     display: flex;
     align-items: baseline;
@@ -229,14 +197,43 @@ a.crumb:hover {
     background: rgba(255,255,255,0.3);
 }
 
-.folder-enter {
-    flex: 0 0 auto;
-    font-size: 12px;
-    color: rgba(255,255,255,0.7);
+.folder-block {
+    display: block;
 }
 
-.folder-row:hover .folder-enter {
+.folder-children[hidden] {
+    display: none;
+}
+
+button.folder-row {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    font-family: inherit;
+    font-size: 14px;
     color: #fff;
+    text-align: left;
+    cursor: pointer;
+}
+
+button.folder-row:hover {
+    background: rgba(255,255,255,0.12);
+}
+
+.folder-arrow {
+    flex: 0 0 12px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    transition: transform 0.2s ease;
+}
+
+.folder-arrow.open {
+    transform: rotate(90deg);
+}
+
+.level .state {
+    text-align: left;
 }
 
 .file-size {

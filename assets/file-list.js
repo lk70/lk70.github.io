@@ -1,6 +1,6 @@
 /**
- * R2 目录浏览器
- * 在含 .list-section[data-prefix] 的页面自动初始化，按 ?path= 参数逐层浏览子文件夹。
+ * R2 目录树（嵌套展示）
+ * 自动初始化 .list-section[data-prefix]，点击文件夹在原位展开子目录并懒加载。
  * 数据来自 /api/list（delimiter 分层）。
  */
 (function () {
@@ -9,26 +9,12 @@
     if (!section) return;
 
     var prefix = section.dataset.prefix;
-    var rootName = prefix === 'comic' ? '连环画' : (prefix === 'oldbook' ? '古籍' : prefix);
-
-    function readPath() {
-        return (new URLSearchParams(location.hash.slice(1)).get('path') || '').replace(/^\/+|\/+$/g, '');
-    }
-
-    var path = readPath();
-
-    var statusEl = section.querySelector('.status');
-    var statusText = section.querySelector('.status .state');
-    var foldersEl = section.querySelector('.folders');
-    var filesEl = section.querySelector('.files');
+    var treeEl = section.querySelector('.tree');
     var countEl = section.querySelector('.count');
-    var titleEl = section.querySelector('.dir-title');
-    var crumbEl = section.querySelector('.breadcrumb');
-    var moreWrap = section.querySelector('.more-wrap');
-    var moreBtn = section.querySelector('.more-btn');
+    if (!treeEl) return;
 
-    var state = { cursor: null, files: 0, folders: 0, done: false, loading: false };
-    var seenFolders = {};
+    var rootFolderCount = 0;
+    var rootFileCount = 0;
 
     function fmtSize(n) {
         if (!n && n !== 0) return '';
@@ -44,80 +30,20 @@
         return name.slice(i + 1).toUpperCase().slice(0, 4);
     }
 
-    function setStatus(text) {
-        statusText.textContent = text;
-        statusEl.style.display = 'block';
-    }
-
-    function hideStatus() {
-        statusEl.style.display = 'none';
-    }
-
-    function setCount() {
+    function updateCount() {
         var parts = [];
-        if (state.folders) parts.push(state.folders + ' 个文件夹');
-        if (state.files) parts.push(state.files + ' 个文件');
-        var text = parts.length ? parts.join(' · ') : '空目录';
-        if (!state.done) text += ' · 可继续加载';
-        countEl.textContent = text;
+        if (rootFolderCount) parts.push(rootFolderCount + ' 个文件夹');
+        if (rootFileCount) parts.push(rootFileCount + ' 个文件');
+        countEl.textContent = parts.length ? parts.join(' · ') : '';
     }
 
-    function makeCrumb(label, href) {
-        var el = document.createElement(href ? 'a' : 'span');
-        el.className = 'crumb' + (href ? '' : ' current');
-        if (href) el.href = href;
-        el.textContent = label;
-        return el;
-    }
-
-    function renderBreadcrumb() {
-        crumbEl.textContent = '';
-        crumbEl.appendChild(makeCrumb(rootName, path ? prefix + '.html' : null));
-
-        var segments = path ? path.split('/') : [];
-        var acc = '';
-        segments.forEach(function (seg, i) {
-            acc = acc ? acc + '/' + seg : seg;
-            var sep = document.createElement('span');
-            sep.className = 'crumb-sep';
-            sep.textContent = '›';
-            crumbEl.appendChild(sep);
-            crumbEl.appendChild(makeCrumb(seg, i === segments.length - 1 ? null : '#path=' + encodeURIComponent(acc)));
-        });
-
-        titleEl.textContent = segments.length ? segments[segments.length - 1] : '全部文件';
-    }
-
-    function folderRow(folder) {
-        var a = document.createElement('a');
-        a.className = 'file-row folder-row';
-        a.href = '#path=' + encodeURIComponent(folder.path);
-
-        var icon = document.createElement('span');
-        icon.className = 'badge folder-badge';
-        icon.textContent = '📁';
-
-        var name = document.createElement('span');
-        name.className = 'file-name';
-        name.textContent = folder.name;
-        name.title = folder.name;
-
-        var enter = document.createElement('span');
-        enter.className = 'folder-enter';
-        enter.textContent = '进入 ›';
-
-        a.appendChild(icon);
-        a.appendChild(name);
-        a.appendChild(enter);
-        return a;
-    }
-
-    function fileRow(obj) {
+    function fileRow(obj, depth) {
         var a = document.createElement('a');
         a.className = 'file-row';
         a.href = obj.url || ('/api/file?key=' + encodeURIComponent(obj.key));
         a.target = '_blank';
         a.rel = 'noopener';
+        a.style.paddingLeft = (18 + depth * 20 + 22) + 'px';
 
         var badge = document.createElement('span');
         badge.className = 'badge';
@@ -138,84 +64,170 @@
         return a;
     }
 
-    function load(reset) {
-        if (reset) {
-            state.cursor = null;
-            state.files = 0;
-            state.folders = 0;
-            state.done = false;
-            seenFolders = {};
-            foldersEl.textContent = '';
-            filesEl.textContent = '';
-            setStatus('加载中…');
-        }
-        if (state.loading || state.done) return;
+    function folderNode(folder, depth) {
+        var block = document.createElement('div');
+        block.className = 'folder-block';
 
-        state.loading = true;
-        moreBtn.disabled = true;
-        moreBtn.textContent = '加载中…';
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'file-row folder-row';
+        btn.style.paddingLeft = (18 + depth * 20) + 'px';
+        btn.setAttribute('aria-expanded', 'false');
 
-        var params = new URLSearchParams();
-        params.set('prefix', prefix);
-        params.set('limit', String(PAGE_SIZE));
-        if (path) params.set('path', path);
-        if (state.cursor) params.set('cursor', state.cursor);
+        var arrow = document.createElement('span');
+        arrow.className = 'folder-arrow';
+        arrow.textContent = '▸';
 
-        fetch('/api/list?' + params.toString())
-            .then(function (res) {
-                return res.json().catch(function () { return {}; }).then(function (data) {
-                    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
-                    return data;
-                });
-            })
-            .then(function (data) {
-                (data.folders || []).forEach(function (folder) {
-                    if (seenFolders[folder.path]) return;
-                    seenFolders[folder.path] = true;
-                    foldersEl.appendChild(folderRow(folder));
-                    state.folders += 1;
-                });
+        var icon = document.createElement('span');
+        icon.className = 'badge folder-badge';
+        icon.textContent = '📁';
 
-                var objects = data.objects || [];
-                if (objects.length) {
-                    var frag = document.createDocumentFragment();
-                    objects.forEach(function (obj) { frag.appendChild(fileRow(obj)); });
-                    filesEl.appendChild(frag);
-                    state.files += objects.length;
-                }
+        var name = document.createElement('span');
+        name.className = 'file-name';
+        name.textContent = folder.name;
+        name.title = folder.path;
 
-                state.cursor = data.cursor || null;
-                state.done = !data.truncated || !state.cursor;
+        btn.appendChild(arrow);
+        btn.appendChild(icon);
+        btn.appendChild(name);
 
-                if (state.files === 0 && state.folders === 0) {
-                    setStatus('此目录为空');
-                } else {
-                    hideStatus();
-                }
-                setCount();
-                moreWrap.style.display = state.done ? 'none' : 'block';
-            })
-            .catch(function (err) {
-                if (reset) {
-                    foldersEl.textContent = '';
-                    filesEl.textContent = '';
-                }
-                setStatus('清单加载失败：' + err.message + '（请确认 Pages 项目已配置 R2 绑定）');
-                moreWrap.style.display = 'none';
-            })
-            .then(function () {
-                state.loading = false;
-                moreBtn.disabled = false;
-                moreBtn.textContent = '加载更多';
-            });
+        var children = document.createElement('div');
+        children.className = 'folder-children';
+        children.hidden = true;
+
+        btn.addEventListener('click', function () {
+            var open = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+            arrow.classList.toggle('open', !open);
+            children.hidden = open;
+            if (!open && !block.dataset.loaded) {
+                block.dataset.loaded = '1';
+                createLevel(children, folder.path, depth + 1);
+            }
+        });
+
+        block.appendChild(btn);
+        block.appendChild(children);
+        return block;
     }
 
-    moreBtn.addEventListener('click', function () { load(false); });
-    window.addEventListener('hashchange', function () {
-        path = readPath();
-        renderBreadcrumb();
+    function createLevel(container, path, depth) {
+        var level = document.createElement('div');
+        level.className = 'level';
+
+        var foldersEl = document.createElement('div');
+        foldersEl.className = 'level-folders';
+        var filesEl = document.createElement('div');
+        filesEl.className = 'level-files';
+
+        var emptyEl = document.createElement('div');
+        emptyEl.className = 'state';
+        emptyEl.style.paddingLeft = (18 + depth * 20) + 'px';
+        emptyEl.textContent = '加载中…';
+
+        var moreWrap = document.createElement('div');
+        moreWrap.className = 'more-wrap';
+        var moreBtn = document.createElement('button');
+        moreBtn.type = 'button';
+        moreBtn.className = 'more-btn';
+        moreBtn.textContent = '加载更多';
+        moreWrap.appendChild(moreBtn);
+        moreWrap.style.display = 'none';
+
+        level.appendChild(foldersEl);
+        level.appendChild(filesEl);
+        level.appendChild(emptyEl);
+        level.appendChild(moreWrap);
+        container.appendChild(level);
+
+        var st = { cursor: null, done: false, loading: false, seen: {}, count: 0 };
+
+        function setEmpty(text) {
+            emptyEl.textContent = text;
+            emptyEl.style.display = 'block';
+        }
+
+        function load(reset) {
+            if (reset) {
+                st.cursor = null;
+                st.done = false;
+                st.loading = false;
+                st.seen = {};
+                st.count = 0;
+                foldersEl.textContent = '';
+                filesEl.textContent = '';
+                setEmpty('加载中…');
+                moreWrap.style.display = 'none';
+            }
+            if (st.loading || st.done) return;
+
+            st.loading = true;
+            moreBtn.disabled = true;
+            moreBtn.textContent = '加载中…';
+
+            var params = new URLSearchParams();
+            params.set('prefix', prefix);
+            params.set('limit', String(PAGE_SIZE));
+            if (path) params.set('path', path);
+            if (st.cursor) params.set('cursor', st.cursor);
+
+            fetch('/api/list?' + params.toString())
+                .then(function (res) {
+                    return res.json().catch(function () { return {}; }).then(function (data) {
+                        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+                        return data;
+                    });
+                })
+                .then(function (data) {
+                    var folders = (data.folders || []).slice().sort(function (a, b) {
+                        return a.name.localeCompare(b.name, 'zh-Hans-CN');
+                    });
+                    folders.forEach(function (folder) {
+                        if (st.seen['d:' + folder.path]) return;
+                        st.seen['d:' + folder.path] = true;
+                        foldersEl.appendChild(folderNode(folder, depth));
+                        st.count += 1;
+                        if (depth === 0) rootFolderCount += 1;
+                    });
+
+                    var objects = data.objects || [];
+                    if (objects.length) {
+                        var frag = document.createDocumentFragment();
+                        objects.forEach(function (obj) {
+                            if (st.seen['f:' + obj.key]) return;
+                            st.seen['f:' + obj.key] = true;
+                            frag.appendChild(fileRow(obj, depth));
+                            st.count += 1;
+                            if (depth === 0) rootFileCount += 1;
+                        });
+                        filesEl.appendChild(frag);
+                    }
+
+                    st.cursor = data.cursor || null;
+                    st.done = !data.truncated || !st.cursor;
+
+                    if (st.count === 0) {
+                        setEmpty('此目录为空');
+                    } else {
+                        emptyEl.style.display = 'none';
+                    }
+                    moreWrap.style.display = st.done ? 'none' : 'block';
+                    if (depth === 0) updateCount();
+                })
+                .catch(function (err) {
+                    setEmpty('加载失败：' + err.message + '（请确认 Pages 项目已配置 R2 绑定）');
+                    moreWrap.style.display = 'none';
+                })
+                .then(function () {
+                    st.loading = false;
+                    moreBtn.disabled = false;
+                    moreBtn.textContent = '加载更多';
+                });
+        }
+
+        moreBtn.addEventListener('click', function () { load(false); });
         load(true);
-    });
-    renderBreadcrumb();
-    load(true);
+    }
+
+    createLevel(treeEl, '', 0);
 })();

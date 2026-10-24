@@ -1,8 +1,8 @@
 /**
  * Cloudflare Pages Function: /api/list
  *
- * 按目录层级列出 R2 桶 udisk 中 comic/ 与 oldbook/ 下的子文件夹和文件。
- * 依赖：Pages 项目的 R2 绑定。绑定变量名可为 R2 / BUCKET / UDISK / udisk 等。
+ * 按目录层级列出 R2 桶 udisk2 中 comic/ 与 oldbook/ 下的子文件夹和文件。
+ * 依赖：Pages 项目的 R2 绑定。绑定变量名可为 udisk2 / UDISK2 / R2 / BUCKET 等。
  *
  * 查询参数：
  *   prefix  comic | oldbook
@@ -14,7 +14,7 @@
  */
 
 const ALLOWED_PREFIXES = new Set(['comic', 'oldbook']);
-const BINDING_NAMES = ['R2', 'BUCKET', 'UDISK', 'udisk', 'r2', 'bucket', 'BOOKS', 'R2_BUCKET'];
+const BINDING_NAMES = ['udisk2', 'UDISK2', 'R2', 'BUCKET', 'UDISK', 'udisk', 'r2', 'bucket', 'BOOKS', 'R2_BUCKET'];
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {

@@ -1,15 +1,15 @@
 /**
  * Cloudflare Pages Function: /api/file
  *
- * 从 R2 桶 udisk 读取 comic/ 或 oldbook/ 下的文件并流式返回，
+ * 从 R2 桶 udisk2 读取 comic/ 或 oldbook/ 下的文件并流式返回，
  * 支持 Range 请求（PDF 阅读器按需分段加载）。
  *
  * 查询参数：key  完整对象键，如 comic/三国演义/01.pdf
- * 依赖：Pages 项目的 R2 绑定（变量名 R2 / BUCKET / UDISK / udisk 等）。
+ * 依赖：Pages 项目的 R2 绑定（变量名 udisk2 / UDISK2 / R2 等）。
  */
 
 const ALLOWED_PREFIXES = ['comic/', 'oldbook/'];
-const BINDING_NAMES = ['R2', 'BUCKET', 'UDISK', 'udisk', 'r2', 'bucket', 'BOOKS', 'R2_BUCKET'];
+const BINDING_NAMES = ['udisk2', 'UDISK2', 'R2', 'BUCKET', 'UDISK', 'udisk', 'r2', 'bucket', 'BOOKS', 'R2_BUCKET'];
 
 const CONTENT_TYPES = {
   pdf: 'application/pdf',
