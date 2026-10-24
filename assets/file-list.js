@@ -30,6 +30,33 @@
         return name.slice(i + 1).toUpperCase().slice(0, 4);
     }
 
+    // 同一目录的响应只请求一次（折叠后再展开、悬停预取都复用）
+    var requestCache = Object.create(null);
+
+    function fetchPage(path, cursor) {
+        var key = path + '|' + (cursor || '');
+        if (requestCache[key]) return requestCache[key];
+
+        var params = new URLSearchParams();
+        params.set('prefix', prefix);
+        params.set('limit', String(PAGE_SIZE));
+        if (path) params.set('path', path);
+        if (cursor) params.set('cursor', cursor);
+
+        var p = fetch('/api/list?' + params.toString()).then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (data) {
+                if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+                return data;
+            });
+        });
+
+        requestCache[key] = p;
+        p.catch(function () {
+            if (requestCache[key] === p) delete requestCache[key];
+        });
+        return p;
+    }
+
     function updateCount() {
         var parts = [];
         if (rootFolderCount) parts.push(rootFolderCount + ' 个文件夹');
@@ -94,6 +121,18 @@
         var children = document.createElement('div');
         children.className = 'folder-children';
         children.hidden = true;
+
+        var prefetchTimer = null;
+        function prefetch() {
+            if (block.dataset.loaded) return;
+            clearTimeout(prefetchTimer);
+            prefetchTimer = setTimeout(function () {
+                fetchPage(folder.path, null).catch(function () {});
+            }, 120);
+        }
+        btn.addEventListener('pointerenter', prefetch);
+        btn.addEventListener('focus', prefetch);
+        btn.addEventListener('pointerleave', function () { clearTimeout(prefetchTimer); });
 
         btn.addEventListener('click', function () {
             var open = btn.getAttribute('aria-expanded') === 'true';
@@ -165,19 +204,7 @@
             moreBtn.disabled = true;
             moreBtn.textContent = '加载中…';
 
-            var params = new URLSearchParams();
-            params.set('prefix', prefix);
-            params.set('limit', String(PAGE_SIZE));
-            if (path) params.set('path', path);
-            if (st.cursor) params.set('cursor', st.cursor);
-
-            fetch('/api/list?' + params.toString())
-                .then(function (res) {
-                    return res.json().catch(function () { return {}; }).then(function (data) {
-                        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
-                        return data;
-                    });
-                })
+            fetchPage(path, st.cursor)
                 .then(function (data) {
                     var folders = (data.folders || []).slice().sort(function (a, b) {
                         return a.name.localeCompare(b.name, 'zh-Hans-CN');

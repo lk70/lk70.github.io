@@ -21,7 +21,8 @@ function json(body, status = 200) {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'public, max-age=60',
+      'Cache-Control':
+        status === 200 ? 'public, max-age=60, stale-while-revalidate=300' : 'no-store',
     },
   });
 }
@@ -51,9 +52,18 @@ function normalizePath(raw) {
   return parts.join('/');
 }
 
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet(context) {
+  const { request, env } = context;
   const url = new URL(request.url);
   const prefix = (url.searchParams.get('prefix') || '').replace(/^\/+|\/+$/g, '');
+
+  // 边缘缓存：同一目录的重复请求直接命中 Cloudflare 缓存，避免再次访问 R2
+  const cache = typeof caches !== 'undefined' && caches.default ? caches.default : null;
+  const cacheKey = cache ? new Request(url.toString(), { method: 'GET' }) : null;
+  if (cache) {
+    const hit = await cache.match(cacheKey);
+    if (hit) return hit;
+  }
 
   if (!ALLOWED_PREFIXES.has(prefix)) {
     return json({ error: '无效的目录，仅支持 comic 或 oldbook' }, 400);
@@ -98,7 +108,7 @@ export async function onRequestGet({ request, env }) {
           : null,
       }));
 
-    return json({
+    const response = json({
       prefix,
       path,
       folders,
@@ -106,6 +116,11 @@ export async function onRequestGet({ request, env }) {
       truncated: !!listed.truncated,
       cursor: listed.truncated ? listed.cursor || null : null,
     });
+
+    if (cache) {
+      context.waitUntil(cache.put(cacheKey, response.clone()).catch(() => {}));
+    }
+    return response;
   } catch (err) {
     return json({ error: '读取 R2 目录失败：' + (err && err.message ? err.message : String(err)) }, 500);
   }
