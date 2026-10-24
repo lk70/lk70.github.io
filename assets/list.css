@@ -1,0 +1,263 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+::selection {
+    background: #a65b5b;
+    color: #fff;
+}
+
+nav {
+    position: fixed;
+    top: 0;
+    background: rgba(27, 27, 27, 0.95);
+    width: 100%;
+    padding: 15px 0;
+    z-index: 12;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+nav .menu {
+    max-width: 900px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+}
+
+.menu .logo a {
+    text-decoration: none;
+    color: #f0f;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.menu ul {
+    display: inline-flex;
+    list-style: none;
+}
+
+.menu ul li {
+    margin-left: 10px;
+}
+
+.menu ul li a {
+    text-decoration: none;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 8px 20px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    background: rgba(255,255,255,0.1);
+}
+
+.menu ul li a:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
+
+.hero-section {
+    padding: 120px 20px 30px;
+    text-align: center;
+}
+
+.hero-section .title {
+    color: #fff;
+    font-size: 44px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-section .sub_title {
+    color: #0ff;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.back-link {
+    display: inline-block;
+    text-decoration: none;
+    color: rgba(255,255,255,0.85);
+    font-size: 14px;
+    padding: 7px 18px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.25);
+    transition: all 0.2s ease;
+}
+
+.back-link:hover {
+    background: rgba(255,255,255,0.26);
+}
+
+.list-section {
+    max-width: 900px;
+    margin: 10px auto 0;
+    padding: 0 20px 50px;
+}
+
+.section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    color: #fff;
+}
+
+.section-head h2 {
+    font-size: 22px;
+    letter-spacing: 1px;
+}
+
+.section-head .count {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+}
+
+.list-card {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+}
+
+.file-list {
+    max-height: 620px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.35) transparent;
+}
+
+.file-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.file-list::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 4px;
+}
+
+.file-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    transition: background 0.2s ease;
+}
+
+.file-row:last-child {
+    border-bottom: none;
+}
+
+.file-row:hover {
+    background: rgba(255,255,255,0.12);
+}
+
+.badge {
+    flex: 0 0 auto;
+    min-width: 44px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.22);
+}
+
+.file-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    font-variant-numeric: tabular-nums;
+}
+
+.state {
+    padding: 24px;
+    text-align: center;
+    color: rgba(255,255,255,0.8);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.more-wrap {
+    display: none;
+    text-align: center;
+    padding: 14px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+}
+
+.more-btn {
+    padding: 9px 26px;
+    border: none;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.more-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.32);
+}
+
+.more-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.site-footer {
+    text-align: center;
+    padding: 0 20px 40px;
+    color: rgba(255,255,255,0.72);
+    font-size: 13px;
+}
+
+@media (max-width: 640px) {
+    .menu .logo a {
+        font-size: 20px;
+    }
+
+    .menu ul li a {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .hero-section .title {
+        font-size: 34px;
+    }
+
+    .hero-section .sub_title {
+        font-size: 20px;
+    }
+}
