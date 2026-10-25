@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="CN" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言板 · 探索乐学</title>
+    <link rel="stylesheet" href="assets/list.css">
+    <link rel="stylesheet" href="assets/guestbook.css">
+</head>
+<body>
+    <nav>
+        <div class="menu">
+            <div class="logo">
+                <a href="index.html">探索乐学<span class="logo-en">（DISCOVER AND STUDY）</span></a>
+            </div>
+            <ul>
+                <li><a href="comic.html">连环画</a></li>
+                <li><a href="oldbook.html">古籍</a></li>
+                <li><a href="guestbook.html">留言板</a></li>
+                <li><a href="tools.html">工具</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="title">留言板</div>
+        <div class="sub_title">GUESTBOOK</div>
+        <a class="back-link" href="index.html">← 返回首页</a>
+    </div>
+
+    <section class="list-section gb-page">
+        <div class="gb-form-card">
+            <h2 class="gb-form-title">发表留言</h2>
+            <form id="gbForm" autocomplete="off">
+                <div class="gb-form-row">
+                    <label class="gb-label" for="gbName">用户名</label>
+                    <input id="gbName" class="gb-input" type="text" maxlength="20" placeholder="请输入用户名（必填）" autocomplete="nickname" required>
+                </div>
+                <div class="gb-form-row">
+                    <label class="gb-label" for="gbContent">留言内容</label>
+                    <textarea id="gbContent" class="gb-textarea" maxlength="500" placeholder="请输入留言内容（必填）" required></textarea>
+                </div>
+                <div class="gb-form-foot">
+                    <span class="gb-form-tip"></span>
+                    <button class="gb-submit" type="submit">发表留言</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="gb-list-card">
+            <div class="gb-list-head">
+                <h2>全部留言</h2>
+                <span class="gb-count"></span>
+            </div>
+            <div class="gb-list"></div>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        Copyright &copy; 2026 Kelvin. All Rights Reserved.
+    </footer>
+
+    <script src="assets/guestbook.js"></script>
+</body>
+</html>

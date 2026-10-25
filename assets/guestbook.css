@@ -1,0 +1,347 @@
+/* ===== 留言板通用 ===== */
+.gb-form-card,
+.gb-list-card,
+.gb-w-list {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 16px;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
+.gb-form-card {
+    padding: 20px;
+    margin-bottom: 22px;
+}
+
+.gb-form-title {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+}
+
+.gb-form-row {
+    margin-bottom: 12px;
+}
+
+.gb-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.gb-input,
+.gb-textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.gb-input::placeholder,
+.gb-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.gb-input:focus,
+.gb-textarea:focus {
+    border-color: #00d9ff;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.gb-textarea {
+    min-height: 100px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+.gb-form-foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gb-tip,
+.gb-form-tip {
+    flex: 1;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.4;
+}
+
+.gb-tip.error,
+.gb-form-tip.error {
+    color: #ff8b8b;
+}
+
+.gb-submit {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #00d9ff, #0099cc);
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gb-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 153, 204, 0.45);
+}
+
+.gb-submit:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.gb-small {
+    padding: 8px 18px;
+    font-size: 13px;
+}
+
+.gb-cancel {
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 20px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gb-cancel:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* ===== 留言列表 ===== */
+.gb-list-card {
+    overflow: hidden;
+}
+
+.gb-list-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+.gb-list-head h2 {
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.gb-list-head .gb-count {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.68);
+}
+
+.gb-msg {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+}
+
+.gb-msg:last-child {
+    border-bottom: none;
+}
+
+.gb-msg-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.gb-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #00e0ff;
+    overflow-wrap: anywhere;
+}
+
+.gb-time {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    font-variant-numeric: tabular-nums;
+}
+
+.gb-body {
+    font-size: 14px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.92);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.gb-msg > .gb-body {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.gb-msg > .gb-body:hover {
+    color: #fff;
+}
+
+.gb-actions {
+    margin-top: 6px;
+}
+
+.gb-reply-btn {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #00d9ff;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.gb-reply-btn:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.gb-replies {
+    margin-top: 12px;
+    padding-left: 14px;
+    border-left: 2px solid rgba(255, 255, 255, 0.18);
+}
+
+.gb-reply {
+    padding: 8px 0;
+}
+
+.gb-reply .gb-body {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.gb-reply-form {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.gb-reply-form .gb-input {
+    margin-bottom: 10px;
+}
+
+.gb-reply-textarea {
+    min-height: 72px;
+    margin-bottom: 10px;
+}
+
+/* ===== 页面底部挂件 ===== */
+.gb-widget {
+    max-width: 900px;
+    margin: 0 auto 36px;
+    padding: 0 20px;
+}
+
+.gb-w-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.gb-w-head h2 {
+    color: #fff;
+    font-size: 20px;
+    letter-spacing: 1px;
+}
+
+.gb-w-head a {
+    color: #00e0ff;
+    font-size: 13px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.gb-w-head a:hover {
+    text-decoration: underline;
+}
+
+.gb-w-list {
+    max-height: 470px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.gb-w-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.gb-w-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.gb-state {
+    padding: 22px 18px;
+    text-align: center;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.68);
+}
+
+.gb-state.error {
+    color: #ff8b8b;
+}
+
+.gb-state a {
+    color: #00e0ff;
+    text-decoration: none;
+}
+
+.gb-state a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+    .gb-widget {
+        padding: 0 16px;
+        margin-bottom: 28px;
+    }
+
+    .gb-msg {
+        padding: 12px 14px;
+    }
+
+    .gb-form-card {
+        padding: 16px;
+    }
+
+    .gb-form-foot {
+        flex-wrap: wrap;
+    }
+
+    .gb-form-tip {
+        flex: 1 0 100%;
+        order: -1;
+        margin-bottom: 8px;
+    }
+}
