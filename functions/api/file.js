@@ -1,15 +1,17 @@
 /**
  * Cloudflare Pages Function: /api/file
  *
- * 从 R2 桶 udisk2 读取 comic/ 或 oldbook/ 下的文件并流式返回，
- * 支持 Range 请求（PDF 阅读器按需分段加载）。
+ * 从 R2 桶读取文件并流式返回，支持 Range 请求（PDF 阅读器按需分段加载）。
  *
- * 查询参数：key  完整对象键，如 comic/三国演义/01.pdf
- * 依赖：Pages 项目的 R2 绑定（变量名 udisk2 / UDISK2 / R2 等）。
+ * 查询参数：
+ *   key     完整对象键，如 comic/三国演义/01.pdf
+ *   bucket  可选，upload 时读取网页上传使用的 upload 桶
+ * 依赖：Pages 项目的 R2 绑定（udisk2 / UPLOAD）。
  */
 
 const ALLOWED_PREFIXES = ['comic/', 'oldbook/'];
 const BINDING_NAMES = ['udisk2', 'UDISK2', 'R2', 'BUCKET', 'UDISK', 'udisk', 'r2', 'bucket', 'BOOKS', 'R2_BUCKET'];
+const UPLOAD_BINDING_NAMES = ['UPLOAD', 'upload', 'UPLOAD_BUCKET', 'upload_bucket', 'UPLOADS', 'R2_UPLOAD'];
 
 const CONTENT_TYPES = {
   pdf: 'application/pdf',
@@ -40,6 +42,13 @@ const CONTENT_TYPES = {
 
 function resolveBucket(env) {
   for (const name of BINDING_NAMES) {
+    if (env[name]) return env[name];
+  }
+  return null;
+}
+
+function resolveUploadBucket(env) {
+  for (const name of UPLOAD_BINDING_NAMES) {
     if (env[name]) return env[name];
   }
   return null;
@@ -88,13 +97,17 @@ function buildHeaders(meta, key) {
 async function handle(request, env, headOnly) {
   const url = new URL(request.url);
   const key = url.searchParams.get('key') || '';
+  const isUpload = url.searchParams.get('bucket') === 'upload';
 
-  if (!key || key.includes('..') || !ALLOWED_PREFIXES.some((p) => key.startsWith(p))) {
+  const keyOk = key && !key.includes('..') && !key.startsWith('/');
+  if (!keyOk || (!isUpload && !ALLOWED_PREFIXES.some((p) => key.startsWith(p)))) {
     return text('无效的文件路径', 400);
   }
 
-  const bucket = resolveBucket(env);
-  if (!bucket) return text('R2 绑定未配置（变量名需为 R2）', 503);
+  const bucket = isUpload ? resolveUploadBucket(env) : resolveBucket(env);
+  if (!bucket) {
+    return text(isUpload ? '上传桶未绑定（变量名需为 UPLOAD）' : 'R2 绑定未配置（变量名需为 R2）', 503);
+  }
 
   const rangeHeader = request.headers.get('Range');
 
