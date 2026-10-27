@@ -9,7 +9,7 @@
  * 依赖：Pages 项目的 R2 绑定（udisk2 / UPLOAD）。
  */
 
-const ALLOWED_PREFIXES = ['comic/', 'oldbook/'];
+const ALLOWED_PREFIXES = ['comic/', 'oldbook/', '_guestbook/'];
 const BINDING_NAMES = ['udisk2', 'UDISK2', 'R2', 'BUCKET', 'UDISK', 'udisk', 'r2', 'bucket', 'BOOKS', 'R2_BUCKET'];
 const UPLOAD_BINDING_NAMES = ['UPLOAD', 'upload', 'UPLOAD_BUCKET', 'upload_bucket', 'UPLOADS', 'R2_UPLOAD'];
 
