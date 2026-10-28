@@ -3,7 +3,7 @@
  *
  * 接收网页上传的文件并写入 R2 桶 upload。
  * 依赖：Pages 项目的 R2 绑定，变量名建议为 UPLOAD（也兼容 upload / UPLOAD_BUCKET 等）。
- * 可选：UPLOAD_PUBLIC_BASE 配置后，返回可直接访问的直链。
+ * 返回的 url 统一为站点代理地址，不暴露 R2 直链。
  *
  * 请求：multipart/form-data
  *   file  可多个
@@ -66,11 +66,6 @@ function resolveBucket(env) {
     if (env[name]) return env[name];
   }
   return null;
-}
-
-function publicBase(env) {
-  const base = env.UPLOAD_PUBLIC_BASE || env.R2_UPLOAD_PUBLIC_BASE || '';
-  return base.replace(/\/+$/, '');
 }
 
 /** 规范化目标目录；非法返回 null */
@@ -140,7 +135,6 @@ export async function onRequestPost(context) {
     return json({ error: '单次上传总大小不能超过 95 MB' }, 413);
   }
 
-  const base = publicBase(env);
   const uploaded = [];
   const failed = [];
 
@@ -183,7 +177,7 @@ export async function onRequestPost(context) {
         key,
         name,
         size: file.size,
-        url: base ? base + '/' + key.split('/').map((s) => encodeURIComponent(s)).join('/') : null,
+        url: '/api/file?bucket=upload&key=' + encodeURIComponent(key),
       });
     } catch (err) {
       failed.push({ name, error: err && err.message ? err.message : String(err) });

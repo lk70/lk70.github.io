@@ -43,18 +43,6 @@ function resolveUploadBucket(env) {
   return null;
 }
 
-/**
- * 可选：R2 桶的公开访问域名（如 https://files.example.com）。
- * 配置后清单返回直链，文件下载不再经过 Pages Function，速度明显更快。
- */
-function publicBase(env, prefix) {
-  const base =
-    prefix === 'upload'
-      ? env.UPLOAD_PUBLIC_BASE || env.R2_UPLOAD_PUBLIC_BASE || ''
-      : env.R2_PUBLIC_BASE || env.PUBLIC_R2_BASE || '';
-  return base.replace(/\/+$/, '');
-}
-
 /** 规范化子目录路径；非法（含 . / .. / 空段）返回 null */
 function normalizePath(raw) {
   const trimmed = (raw || '').replace(/^\/+|\/+$/g, '');
@@ -111,7 +99,6 @@ export async function onRequestGet(context) {
 
   try {
     const listed = await bucket.list({ prefix: basePrefix, delimiter: '/', cursor, limit });
-    const base = publicBase(env, prefix);
 
     const folders = (listed.delimitedPrefixes || []).map((dp) => {
       // 文件夹 path 始终相对于 prefix 根目录，供前端逐层拼接查询
@@ -128,11 +115,9 @@ export async function onRequestGet(context) {
         name: o.key.slice(basePrefix.length),
         size: o.size,
         uploaded: o.uploaded ? new Date(o.uploaded).toISOString() : null,
-        url: base
-          ? base + '/' + o.key.split('/').map((s) => encodeURIComponent(s)).join('/')
-          : isUpload
-            ? '/api/file?bucket=upload&key=' + encodeURIComponent(o.key)
-            : null,
+        url: isUpload
+          ? '/api/file?bucket=upload&key=' + encodeURIComponent(o.key)
+          : null,
       }));
 
     const response = json({

@@ -13,6 +13,19 @@ const ALLOWED_PREFIXES = ['comic/', 'oldbook/'];
 const BINDING_NAMES = ['udisk2', 'UDISK2', 'R2', 'BUCKET', 'UDISK', 'udisk', 'r2', 'bucket', 'BOOKS', 'R2_BUCKET'];
 const UPLOAD_BINDING_NAMES = ['UPLOAD', 'upload', 'UPLOAD_BUCKET', 'upload_bucket', 'UPLOADS', 'R2_UPLOAD'];
 
+// 边缘缓存：大于该体积的对象只回源、不写入边缘缓存，避免占用过多内存
+const EDGE_CACHE_MAX = 64 * 1024 * 1024;
+// 浏览器缓存 1 天，Cloudflare 边缘缓存 30 天
+const CACHE_CONTROL = 'public, max-age=86400, s-maxage=2592000, stale-while-revalidate=86400';
+// 上传桶内容可能被同名覆盖，缓存时间短一些
+const UPLOAD_CACHE_CONTROL = 'public, max-age=300, s-maxage=3600, stale-while-revalidate=600';
+
+function cacheControlFor(isUpload) {
+  return isUpload ? UPLOAD_CACHE_CONTROL : CACHE_CONTROL;
+}
+
+const EDGE_CACHE = typeof caches !== 'undefined' && caches.default ? caches.default : null;
+
 const CONTENT_TYPES = {
   pdf: 'application/pdf',
   epub: 'application/epub+zip',
@@ -84,17 +97,74 @@ function parseRangeHeader(header) {
 }
 
 /** 基于 R2 对象的元数据构造响应头 */
-function buildHeaders(meta, key) {
+function buildHeaders(meta, key, isUpload) {
   const headers = new Headers();
   if (typeof meta.writeHttpMetadata === 'function') meta.writeHttpMetadata(headers);
   if (!headers.get('Content-Type')) headers.set('Content-Type', guessType(key));
   headers.set('Accept-Ranges', 'bytes');
   headers.set('ETag', meta.httpEtag);
-  headers.set('Cache-Control', 'public, max-age=86400');
+  headers.set('Cache-Control', cacheControlFor(isUpload));
   return headers;
 }
 
-async function handle(request, env, headOnly) {
+/** If-None-Match 与对象 ETag 是否匹配（支持 W/ 前缀与逗号列表） */
+function etagMatches(header, etag) {
+  if (!header || !etag) return false;
+  return header.split(',').some((raw) => {
+    const tag = raw.trim().replace(/^W\//, '');
+    return tag === '*' || tag === etag;
+  });
+}
+
+/** 归一化边缘缓存键，忽略用于绕过缓存的随机参数 */
+function cacheKeyFor(request) {
+  const url = new URL(request.url);
+  const key = url.searchParams.get('key') || '';
+  const isUpload = url.searchParams.get('bucket') === 'upload';
+  return new Request(
+    url.origin + '/api/file?key=' + encodeURIComponent(key) + (isUpload ? '&bucket=upload' : '')
+  );
+}
+
+/** 后台把完整对象写入边缘缓存，供后续 Range / 完整请求命中 */
+async function fillEdgeCache(bucket, key, cacheKey, isUpload) {
+  try {
+    const obj = await bucket.get(key);
+    if (!obj || obj.size > EDGE_CACHE_MAX) return;
+    const headers = buildHeaders(obj, key, isUpload);
+    headers.set('Content-Length', String(obj.size));
+    await EDGE_CACHE.put(cacheKey, new Response(obj.body, { status: 200, headers }));
+  } catch (err) {
+    // 缓存失败不影响正常下载
+  }
+}
+
+/** 用已缓存的完整对象切出 Range 片段；无法满足时返回 null */
+async function sliceCached(cached, spec) {
+  const buf = await cached.arrayBuffer();
+  const total = buf.byteLength;
+  if (!total) return null;
+
+  let start;
+  let end;
+  if (spec.suffix !== undefined) {
+    start = Math.max(total - spec.suffix, 0);
+    end = total - 1;
+  } else {
+    start = spec.start;
+    end = spec.end === null ? total - 1 : Math.min(spec.end, total - 1);
+  }
+  if (start >= total || start > end) return null;
+
+  const headers = new Headers(cached.headers);
+  headers.set('Content-Length', String(end - start + 1));
+  headers.set('Content-Range', 'bytes ' + start + '-' + end + '/' + total);
+  headers.set('X-Cache', 'HIT');
+  return new Response(buf.slice(start, end + 1), { status: 206, headers });
+}
+
+async function handle(context, headOnly) {
+  const { request, env } = context;
   const url = new URL(request.url);
   const key = url.searchParams.get('key') || '';
   const isUpload = url.searchParams.get('bucket') === 'upload';
@@ -110,19 +180,38 @@ async function handle(request, env, headOnly) {
   }
 
   const rangeHeader = request.headers.get('Range');
+  const cacheKey = EDGE_CACHE ? cacheKeyFor(request) : null;
 
   try {
     if (headOnly) {
+      if (EDGE_CACHE) {
+        const hit = await EDGE_CACHE.match(cacheKey);
+        if (hit) {
+          const headers = new Headers(hit.headers);
+          headers.set('X-Cache', 'HIT');
+          return new Response(null, { status: 200, headers });
+        }
+      }
       const meta = await bucket.head(key);
       if (!meta) return text('文件不存在', 404);
-      const headers = buildHeaders(meta, key);
+      const headers = buildHeaders(meta, key, isUpload);
       headers.set('Content-Length', String(meta.size));
+      headers.set('X-Cache', EDGE_CACHE ? 'MISS' : 'BYPASS');
       return new Response(null, { status: 200, headers });
     }
 
     if (rangeHeader) {
       const spec = parseRangeHeader(rangeHeader);
       if (!spec) return new Response('Range 无法满足', { status: 416 });
+
+      // 命中完整对象缓存时直接切片，不再回源 R2
+      if (EDGE_CACHE) {
+        const hit = await EDGE_CACHE.match(cacheKey);
+        if (hit) {
+          const sliced = await sliceCached(hit, spec);
+          return sliced || new Response('Range 无法满足', { status: 416 });
+        }
+      }
 
       let offset;
       let length;
@@ -154,27 +243,59 @@ async function handle(request, env, headOnly) {
         : Math.min(length === undefined ? size - actualOffset : length, size - actualOffset);
       if (!(actualLength > 0)) return new Response('Range 无法满足', { status: 416 });
 
-      const headers = buildHeaders(obj, key);
+      const headers = buildHeaders(obj, key, isUpload);
       headers.set('Content-Length', String(actualLength));
       headers.set('Content-Range', 'bytes ' + actualOffset + '-' + (actualOffset + actualLength - 1) + '/' + size);
+      headers.set('X-Cache', 'MISS');
+
+      // 首次分段请求后台缓存完整对象，后续分段读取可直接命中
+      if (EDGE_CACHE && size <= EDGE_CACHE_MAX) {
+        context.waitUntil(fillEdgeCache(bucket, key, cacheKey, isUpload));
+      }
+
       return new Response(obj.body, { status: 206, headers });
+    }
+
+    if (EDGE_CACHE) {
+      const hit = await EDGE_CACHE.match(cacheKey);
+      if (hit) {
+        const headers = new Headers(hit.headers);
+        headers.set('X-Cache', 'HIT');
+        if (etagMatches(request.headers.get('If-None-Match'), headers.get('ETag'))) {
+          headers.delete('Content-Length');
+          return new Response(null, { status: 304, headers });
+        }
+        return new Response(hit.body, { status: 200, headers });
+      }
     }
 
     const obj = await bucket.get(key);
     if (!obj) return text('文件不存在', 404);
 
-    const headers = buildHeaders(obj, key);
+    const headers = buildHeaders(obj, key, isUpload);
     headers.set('Content-Length', String(obj.size));
-    return new Response(obj.body, { status: 200, headers });
+    headers.set('X-Cache', EDGE_CACHE ? 'MISS' : 'BYPASS');
+
+    if (etagMatches(request.headers.get('If-None-Match'), obj.httpEtag)) {
+      if (obj.body && typeof obj.body.cancel === 'function') obj.body.cancel();
+      headers.delete('Content-Length');
+      return new Response(null, { status: 304, headers });
+    }
+
+    const response = new Response(obj.body, { status: 200, headers });
+    if (EDGE_CACHE && obj.size <= EDGE_CACHE_MAX) {
+      context.waitUntil(EDGE_CACHE.put(cacheKey, response.clone()));
+    }
+    return response;
   } catch (err) {
     return text('读取文件失败：' + (err && err.message ? err.message : String(err)), 500);
   }
 }
 
 export async function onRequestGet(context) {
-  return handle(context.request, context.env, false);
+  return handle(context, false);
 }
 
 export async function onRequestHead(context) {
-  return handle(context.request, context.env, true);
+  return handle(context, true);
 }

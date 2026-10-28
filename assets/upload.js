@@ -222,10 +222,11 @@
                 it.barEl.style.width = '100%';
                 setStatus(it, '✓ 已上传', 'done');
                 var info = data.uploaded[0];
-                if (info && info.url) {
+                if (info && info.key) {
                     var link = document.createElement('a');
                     link.className = 'up-link';
-                    link.href = info.url;
+                    // 统一走站点代理，避免暴露 R2 裸直链
+                    link.href = '/api/file?bucket=upload&key=' + encodeURIComponent(info.key);
                     link.target = '_blank';
                     link.rel = 'noopener';
                     link.textContent = '打开';
